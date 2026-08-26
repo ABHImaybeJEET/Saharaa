@@ -182,10 +182,10 @@ export default function App() {
 
         {/* VIEW 1: Full Tactical Command Center (Map + Incident Triage + Units) */}
         {currentView === "map" && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-[620px] animate-in fade-in duration-200">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 h-auto lg:h-[calc(100vh-220px)] min-h-[540px] animate-in fade-in duration-200">
             
             {/* Left: Triage Feed (4 cols) */}
-            <div className="lg:col-span-4 h-[600px] lg:h-full">
+            <div className="lg:col-span-4 h-[460px] lg:h-full overflow-hidden">
               <TriageQueue
                 reports={reports}
                 resources={resources}
@@ -198,7 +198,7 @@ export default function App() {
             </div>
 
             {/* Center: Interactive Map (5 cols) */}
-            <div className="lg:col-span-5 h-[500px] lg:h-full flex flex-col">
+            <div className="lg:col-span-5 h-[460px] lg:h-full flex flex-col overflow-hidden">
               <DisasterMap
                 region={region}
                 reports={reports}
@@ -217,7 +217,7 @@ export default function App() {
             </div>
 
             {/* Right: Relief Resources (3 cols) */}
-            <div className="lg:col-span-3 h-[500px] lg:h-full">
+            <div className="lg:col-span-3 h-[460px] lg:h-full overflow-hidden">
               <ResourcePanel
                 resources={resources}
                 allocations={allocations}

@@ -33,8 +33,59 @@
 .leaflet-container {
   width: 100%;
   height: 100%;
-  background: #070b12 !important;
+  background: #020617 !important;
   font-family: inherit;
+}
+
+/* Noire Leaflet Dark Popup Overrides */
+.leaflet-popup-content-wrapper {
+  background: rgba(8, 14, 26, 0.94) !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(6, 182, 212, 0.1) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(8, 14, 26, 0.94) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+}
+
+.leaflet-popup-close-button {
+  color: #94a3b8 !important;
+  padding: 8px !important;
+  top: 6px !important;
+  right: 6px !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #ffffff !important;
+}
+
+/* Custom Tooltips */
+.leaflet-tooltip {
+  background: rgba(3, 7, 18, 0.92) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(6, 182, 212, 0.4) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6) !important;
+  backdrop-filter: blur(8px) !important;
+  padding: 6px 10px !important;
+}
+
+.leaflet-tooltip-top:before,
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+  border-top-color: rgba(3, 7, 18, 0.92) !important;
 }
 
 /* Custom Animated Marker Styling */
@@ -82,6 +133,7 @@
 .allocation-dash-line {
   stroke-dasharray: 8, 8;
   animation: dash-flow 1.2s linear infinite;
+  filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.6));
 }
 
 @keyframes dash-flow {
@@ -95,16 +147,17 @@
 
 /* Custom Glassmorphism Box */
 .glass-panel {
-  background: rgba(12, 19, 34, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(8, 14, 26, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(50, 74, 120, 0.25);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
 }
 
-.glass-panel-glow {
-  background: rgba(17, 26, 46, 0.85);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  box-shadow: 0 0 25px rgba(239, 68, 68, 0.15);
+.glass-panel-noire {
+  background: rgba(3, 7, 18, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(30, 41, 59, 0.7);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8);
 }

@@ -1,5 +1,5 @@
 // client/src/components/DisasterMap.jsx
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { 
   MapContainer, 
   TileLayer, 
@@ -18,16 +18,19 @@ import {
   AlertTriangle, 
   ShieldAlert, 
   LifeBuoy, 
-  Home, 
+  Building, 
   Package, 
-  Ambulance, 
   Phone, 
   Clock, 
   Send, 
-  ArrowRight, 
-  CheckCircle,
-  ExternalLink,
-  Flame
+  CheckCircle, 
+  Crosshair, 
+  Layers, 
+  Maximize2, 
+  Minimize2,
+  Radio,
+  Flame,
+  Zap
 } from "lucide-react";
 
 // Fix default leaflet icons
@@ -38,13 +41,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// Custom HTML Pin Generator for Reports
+// Custom HTML Pin Generator for Reports (Noire Cyber-Tactical Style)
 function createReportIcon(report) {
   const severityColors = {
-    critical: { bg: "#ef4444", border: "#b91c1c", ring: "rgba(239, 68, 68, 0.4)", text: "#fee2e2" },
-    high: { bg: "#f97316", border: "#c2410c", ring: "rgba(249, 115, 22, 0.35)", text: "#ffedd5" },
-    medium: { bg: "#eab308", border: "#a16207", ring: "rgba(234, 179, 8, 0.3)", text: "#fef9c3" },
-    low: { bg: "#06b6d4", border: "#0e7490", ring: "rgba(6, 182, 212, 0.3)", text: "#cffafe" }
+    critical: { bg: "#ef4444", border: "#dc2626", text: "#fecaca" },
+    high: { bg: "#f97316", border: "#ea580c", text: "#fed7aa" },
+    medium: { bg: "#eab308", border: "#ca8a04", text: "#fef08a" },
+    low: { bg: "#06b6d4", border: "#0891b2", text: "#a5f3fc" }
   };
 
   const style = severityColors[report.severity] || severityColors.medium;
@@ -64,35 +67,37 @@ function createReportIcon(report) {
   const pulseClass = isResolved ? "" : isCritical ? "pulse-pin-critical" : isHigh ? "pulse-pin-high" : "";
 
   const html = `
-    <div class="relative flex items-center justify-center ${pulseClass}" style="width: 32px; height: 32px;">
+    <div class="relative flex items-center justify-center ${pulseClass}" style="width: 30px; height: 30px;">
       <div style="
-        background-color: ${isResolved ? '#64748b' : style.bg};
-        border: 2px solid ${isResolved ? '#334155' : style.border};
-        width: 30px;
-        height: 30px;
+        background: ${isResolved ? '#1e293b' : style.bg};
+        border: 2px solid ${isResolved ? '#475569' : '#030712'};
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 14px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        font-size: 13px;
+        box-shadow: 0 0 15px ${isResolved ? 'transparent' : style.bg + '80'}, 0 4px 10px rgba(0,0,0,0.8);
         color: white;
         cursor: pointer;
+        transition: transform 0.2s ease;
       ">
         ${isResolved ? "✓" : categoryEmoji}
       </div>
       <div style="
         position: absolute;
         bottom: -5px;
-        font-size: 9px;
+        font-size: 8px;
         font-weight: 800;
-        background: #0f172a;
-        color: ${style.bg};
-        border: 1px solid ${style.bg};
-        padding: 0px 4px;
-        border-radius: 4px;
+        background: #030712;
+        color: ${isResolved ? '#94a3b8' : style.bg};
+        border: 1px solid ${isResolved ? '#334155' : style.bg + 'aa'};
+        padding: 0px 3px;
+        border-radius: 3px;
         text-transform: uppercase;
         font-family: monospace;
+        letter-spacing: 0.5px;
       ">
         ${report.severity.substring(0, 4)}
       </div>
@@ -102,13 +107,13 @@ function createReportIcon(report) {
   return L.divIcon({
     className: "custom-report-pin",
     html,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -18]
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -16]
   });
 }
 
-// Custom HTML Pin Generator for Resources
+// Custom HTML Pin Generator for Resources (Noire Rotated Tactical Diamond)
 function createResourceIcon(resource) {
   const typeIcons = {
     rescue_team: "🚤",
@@ -123,19 +128,20 @@ function createResourceIcon(resource) {
   const emoji = typeIcons[resource.type] || "📍";
 
   const html = `
-    <div class="relative flex items-center justify-center" style="width: 36px; height: 36px;">
+    <div class="relative flex items-center justify-center" style="width: 32px; height: 32px;">
       <div style="
-        background: linear-gradient(135deg, #1e293b, #0f172a);
+        background: #090e17;
         border: 2px solid ${statusColor};
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 16px;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+        font-size: 14px;
+        box-shadow: 0 0 12px ${statusColor + '60'}, 0 6px 14px rgba(0,0,0,0.9);
         transform: rotate(45deg);
+        cursor: pointer;
       ">
         <span style="transform: rotate(-45deg); display: block;">${emoji}</span>
       </div>
@@ -159,9 +165,9 @@ function createResourceIcon(resource) {
   return L.divIcon({
     className: "custom-resource-pin",
     html,
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -20]
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -18]
   });
 }
 
@@ -234,15 +240,13 @@ function HeatmapLayer({ reports, enabled }) {
   return null;
 }
 
-// Map View Recenter Controller
+// Recenter Map Helper
 function MapViewController({ center, zoom, selectedReport }) {
   const map = useMap();
 
   useEffect(() => {
     if (selectedReport) {
-      map.flyTo([selectedReport.lat, selectedReport.lng], 14, {
-        duration: 1.2
-      });
+      map.flyTo([selectedReport.lat, selectedReport.lng], 14, { duration: 1.2 });
     }
   }, [selectedReport, map]);
 
@@ -266,8 +270,9 @@ export default function DisasterMap({
 }) {
   const defaultCenter = region?.center || [19.0760, 72.8777];
   const defaultZoom = region?.zoom || 12;
+  const mapRef = useRef(null);
 
-  // Build lines connecting active allocations
+  // Active connected lines
   const activeAllocationLines = allocations
     .filter(a => a.status === "active")
     .map(alloc => {
@@ -288,248 +293,268 @@ export default function DisasterMap({
     })
     .filter(Boolean);
 
+  const handleRecenter = () => {
+    if (mapRef.current) {
+      mapRef.current.flyTo(defaultCenter, defaultZoom, { duration: 1.0 });
+    }
+  };
+
   return (
-    <div className="relative isolate z-0 w-full h-full min-h-[500px] rounded-2xl overflow-hidden border border-tactical-800 shadow-2xl bg-tactical-950">
-      <MapContainer
-        center={defaultCenter}
-        zoom={defaultZoom}
-        scrollWheelZoom={true}
-        className="w-full h-full"
-      >
-        {/* Dark Tactical Tiles */}
-        <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
-          maxZoom={19}
-        />
+    <div className="relative isolate z-0 w-full h-full min-h-[460px] rounded-2xl overflow-hidden border border-slate-800/80 shadow-2xl bg-[#020617] flex flex-col">
+      
+      {/* Top Floating HUD Bar (Zero Wasted Space) */}
+      <div className="absolute top-3 left-3 right-3 z-[400] flex items-center justify-between pointer-events-none">
+        
+        {/* Left: Active Incidents Status Pill */}
+        <div className="pointer-events-auto flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-950/85 backdrop-blur-md border border-slate-800 text-xs shadow-lg">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          <span className="font-mono font-bold text-slate-200">
+            {reports.filter(r => r.status !== 'resolved').length} Active Incidents
+          </span>
+          <span className="text-slate-500 font-mono">|</span>
+          <span className="text-cyan-400 font-mono text-[11px]">
+            {activeAllocationLines.length} Dispatched Routes
+          </span>
+        </div>
 
-        <MapClickHandler onMapClick={onMapClick} />
-        <MapViewController center={defaultCenter} zoom={defaultZoom} selectedReport={selectedReport} />
-        <HeatmapLayer reports={reports} enabled={heatmapEnabled} />
-
-        {/* 1. IMD Hazard Weather Alerts (Polygons) */}
-        {alertsEnabled && imdAlerts.map(alert => (
-          <Polygon
-            key={alert.id}
-            positions={alert.coordinates}
-            pathOptions={{
-              color: alert.color,
-              fillColor: alert.fillColor,
-              fillOpacity: alert.fillOpacity,
-              weight: 2,
-              dashArray: "6, 6"
-            }}
+        {/* Right: Map Controls Pill */}
+        <div className="pointer-events-auto flex items-center space-x-1.5 p-1 rounded-xl bg-slate-950/85 backdrop-blur-md border border-slate-800 shadow-lg">
+          <button
+            onClick={handleRecenter}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-slate-800/60 transition-all text-xs flex items-center gap-1 font-mono"
+            title="Recenter Grid"
           >
-            <Tooltip sticky className="custom-imd-tooltip">
-              <div className="p-1 font-sans">
-                <div className="flex items-center space-x-1 text-xs font-bold" style={{ color: alert.color }}>
-                  <AlertTriangle className="w-3.5 h-3.5 mr-1" />
-                  <span>{alert.title}</span>
-                </div>
-                <div className="text-[10px] text-slate-300 mt-1 max-w-[240px]">
-                  {alert.description}
-                </div>
-                <div className="text-[9px] text-slate-400 font-mono mt-1">
-                  Issued: {alert.issuedBy}
-                </div>
-              </div>
-            </Tooltip>
-          </Polygon>
-        ))}
+            <Crosshair className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Recenter</span>
+          </button>
+        </div>
+      </div>
 
-        {/* 2. Visual Allocation Dispatch Lines (The Star Coordination Feature) */}
-        {allocLinesEnabled && activeAllocationLines.map(({ allocation, report, resource, positions }) => (
-          <Polyline
-            key={allocation.id}
-            positions={positions}
-            pathOptions={{
-              color: "#06b6d4",
-              weight: 3,
-              opacity: 0.85,
-              className: "allocation-dash-line"
-            }}
-          >
-            <Tooltip sticky>
-              <div className="text-xs p-1 font-mono">
-                <div className="text-cyan-400 font-bold flex items-center gap-1">
-                  <span>⚡ ACTIVE DISPATCH ROUTE</span>
-                </div>
-                <div className="text-slate-200 mt-0.5">
-                  <span className="font-semibold text-white">{resource.name}</span> → Incident #{report.id.slice(-6)}
-                </div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
-                  Distance: <span className="text-cyan-300 font-bold">{allocation.distance_km} km</span> | 
-                  Est. Transit: <span className="text-amber-300 font-bold">{allocation.eta_minutes} min</span>
-                </div>
-                <div className="text-[10px] text-slate-500">
-                  Assigned by: {allocation.assigned_by}
-                </div>
-              </div>
-            </Tooltip>
-          </Polyline>
-        ))}
+      {/* Leaflet Map Canvas */}
+      <div className="flex-1 w-full h-full">
+        <MapContainer
+          ref={mapRef}
+          center={defaultCenter}
+          zoom={defaultZoom}
+          scrollWheelZoom={true}
+          className="w-full h-full"
+        >
+          {/* Noire Dark Tile Layer */}
+          <TileLayer
+            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
+            maxZoom={19}
+          />
 
-        {/* 3. Resource Markers */}
-        {resources.map(resource => (
-          <Marker
-            key={resource.id}
-            position={[resource.lat, resource.lng]}
-            icon={createResourceIcon(resource)}
-          >
-            <Popup className="tactical-popup">
-              <div className="p-2 min-w-[230px] font-sans text-slate-900">
-                <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
-                    {resource.type.replace("_", " ")}
-                  </span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    resource.current_load >= resource.capacity
-                      ? "bg-red-100 text-red-700"
-                      : "bg-emerald-100 text-emerald-700"
-                  }`}>
-                    {resource.status.toUpperCase()}
-                  </span>
-                </div>
+          <MapClickHandler onMapClick={onMapClick} />
+          <MapViewController center={defaultCenter} zoom={defaultZoom} selectedReport={selectedReport} />
+          <HeatmapLayer reports={reports} enabled={heatmapEnabled} />
 
-                <h3 className="text-sm font-bold text-slate-900 mt-1.5 leading-snug">
-                  {resource.name}
-                </h3>
-
-                <div className="mt-2 space-y-1.5 text-xs text-slate-600">
-                  <div className="flex justify-between items-center bg-slate-50 p-1.5 rounded">
-                    <span>Active Load / Max:</span>
-                    <span className="font-mono font-bold text-slate-900">
-                      {resource.current_load} / {resource.capacity} units
-                    </span>
+          {/* 1. IMD Hazard Polygons (Noire Red/Orange Shading) */}
+          {alertsEnabled && imdAlerts.map(alert => (
+            <Polygon
+              key={alert.id}
+              positions={alert.coordinates}
+              pathOptions={{
+                color: alert.color,
+                fillColor: alert.fillColor,
+                fillOpacity: 0.18,
+                weight: 1.5,
+                dashArray: "5, 5"
+              }}
+            >
+              <Tooltip sticky>
+                <div className="p-1 font-sans text-xs">
+                  <div className="flex items-center space-x-1 font-bold text-red-400">
+                    <AlertTriangle className="w-3.5 h-3.5 mr-1 text-red-400" />
+                    <span>{alert.title}</span>
                   </div>
-
-                  {resource.equipment && (
-                    <div className="text-[11px] text-slate-500 italic">
-                      🧰 {resource.equipment}
-                    </div>
-                  )}
-
-                  {resource.contact_info && (
-                    <div className="flex items-center text-[11px] text-slate-700 font-medium pt-1">
-                      <Phone className="w-3 h-3 mr-1 text-slate-500" />
-                      <span>{resource.contact_info}</span>
-                    </div>
-                  )}
+                  <div className="text-[10px] text-slate-300 mt-1 max-w-[220px]">
+                    {alert.description}
+                  </div>
                 </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+              </Tooltip>
+            </Polygon>
+          ))}
 
-        {/* 4. Citizen Report Markers */}
-        {reports.map(report => (
-          <Marker
-            key={report.id}
-            position={[report.lat, report.lng]}
-            icon={createReportIcon(report)}
-            eventHandlers={{
-              click: () => onSelectReport && onSelectReport(report)
-            }}
-          >
-            <Popup className="tactical-popup">
-              <div className="p-2.5 min-w-[260px] font-sans text-slate-900">
-                <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
-                  <div className="flex items-center space-x-1.5">
-                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded font-mono uppercase ${
-                      report.severity === "critical" ? "bg-red-100 text-red-700" :
-                      report.severity === "high" ? "bg-orange-100 text-orange-700" :
-                      report.severity === "medium" ? "bg-yellow-100 text-yellow-800" :
-                      "bg-cyan-100 text-cyan-800"
+          {/* 2. Glowing Cyan Dispatch Lines */}
+          {allocLinesEnabled && activeAllocationLines.map(({ allocation, report, resource, positions }) => (
+            <Polyline
+              key={allocation.id}
+              positions={positions}
+              pathOptions={{
+                color: "#06b6d4",
+                weight: 2.5,
+                opacity: 0.9,
+                className: "allocation-dash-line"
+              }}
+            >
+              <Tooltip sticky>
+                <div className="text-xs p-1 font-mono text-cyan-200">
+                  <div className="text-cyan-400 font-bold flex items-center gap-1">
+                    <Zap className="w-3.5 h-3.5" />
+                    <span>ACTIVE SORTIE ROUTE</span>
+                  </div>
+                  <div className="text-white mt-0.5 font-semibold">
+                    {resource.name} → Incident #{report.id.slice(-6)}
+                  </div>
+                  <div className="text-[11px] text-slate-300 mt-0.5">
+                    Distance: <strong className="text-cyan-300">{allocation.distance_km} km</strong> | ETA: <strong className="text-amber-300">{allocation.eta_minutes} min</strong>
+                  </div>
+                </div>
+              </Tooltip>
+            </Polyline>
+          ))}
+
+          {/* 3. Resource Markers */}
+          {resources.map(resource => (
+            <Marker
+              key={resource.id}
+              position={[resource.lat, resource.lng]}
+              icon={createResourceIcon(resource)}
+            >
+              <Popup>
+                <div className="p-3 min-w-[240px] font-sans text-slate-100 bg-slate-950/95 rounded-xl border border-slate-800">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400">
+                      {resource.type.replace("_", " ")}
+                    </span>
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                      resource.current_load >= resource.capacity
+                        ? "bg-red-950 text-red-400 border border-red-800"
+                        : "bg-emerald-950 text-emerald-400 border border-emerald-800"
                     }`}>
-                      {report.severity}
-                    </span>
-                    <span className="text-[10px] text-slate-500 font-mono">
-                      #{report.id.slice(-6)}
+                      {resource.status.toUpperCase()}
                     </span>
                   </div>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">
-                    {report.source === "sms" ? "📱 SMS Fallback" : "🌐 Web Form"}
-                  </span>
-                </div>
 
-                <div className="mt-2 text-xs font-semibold text-slate-800">
-                  {report.location_name || "Disaster Coordinate Site"}
-                </div>
+                  <h3 className="text-xs font-bold text-white mt-2 leading-snug">
+                    {resource.name}
+                  </h3>
 
-                <p className="mt-1 text-xs text-slate-700 leading-relaxed bg-slate-50 p-2 rounded border border-slate-100">
-                  {report.description}
-                </p>
+                  <div className="mt-2 space-y-1.5 text-xs">
+                    <div className="flex justify-between items-center bg-slate-900/80 p-2 rounded-lg border border-slate-800 text-[11px]">
+                      <span className="text-slate-400">Deployed Load:</span>
+                      <span className="font-mono font-bold text-white">
+                        {resource.current_load} / {resource.capacity} units
+                      </span>
+                    </div>
 
-                {report.photo_url && (
-                  <div className="mt-2 rounded-lg overflow-hidden border border-slate-200 max-h-28">
-                    <img src={report.photo_url} alt="Incident field capture" className="w-full h-full object-cover" />
+                    {resource.equipment && (
+                      <div className="text-[10px] text-slate-400 bg-slate-900/40 p-1.5 rounded">
+                        🧰 {resource.equipment}
+                      </div>
+                    )}
+
+                    {resource.contact_info && (
+                      <div className="flex items-center text-[10px] text-slate-300 font-mono pt-1">
+                        <Phone className="w-3 h-3 mr-1 text-slate-500" />
+                        <span>{resource.contact_info}</span>
+                      </div>
+                    )}
                   </div>
-                )}
-
-                <div className="mt-2 pt-2 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-600">
-                  <div className="flex items-center">
-                    <Phone className="w-3 h-3 mr-1 text-slate-500" />
-                    <span className="font-mono">{report.phone}</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400">
-                    {new Date(report.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
                 </div>
+              </Popup>
+            </Marker>
+          ))}
 
-                {/* Quick Action Buttons */}
-                <div className="mt-3 flex items-center gap-1.5 pt-1">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenOverrideModal(report);
-                    }}
-                    className="flex-1 px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold transition-all shadow-sm"
-                  >
-                    Dispatcher Override
-                  </button>
+          {/* 4. Incident Report Markers */}
+          {reports.map(report => (
+            <Marker
+              key={report.id}
+              position={[report.lat, report.lng]}
+              icon={createReportIcon(report)}
+              eventHandlers={{
+                click: () => onSelectReport && onSelectReport(report)
+              }}
+            >
+              <Popup>
+                <div className="p-3 min-w-[260px] font-sans text-slate-100 bg-slate-950/95 rounded-xl border border-slate-800">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
+                    <div className="flex items-center space-x-1.5">
+                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded font-mono uppercase ${
+                        report.severity === "critical" ? "bg-red-950 text-red-400 border border-red-800" :
+                        report.severity === "high" ? "bg-orange-950 text-orange-400 border border-orange-800" :
+                        report.severity === "medium" ? "bg-yellow-950 text-yellow-400 border border-yellow-800" :
+                        "bg-cyan-950 text-cyan-400 border border-cyan-800"
+                      }`}>
+                        {report.severity}
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        #{report.id.slice(-6)}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {report.source === "sms" ? "📱 GSM SMS" : "🌐 Web SOS"}
+                    </span>
+                  </div>
 
-                  {report.status !== "resolved" && (
+                  <div className="mt-2 text-xs font-semibold text-white">
+                    {report.location_name || "Incident Site"}
+                  </div>
+
+                  <p className="mt-1 text-xs text-slate-300 leading-relaxed bg-slate-900/60 p-2 rounded-lg border border-slate-800/80">
+                    {report.description}
+                  </p>
+
+                  <div className="mt-2 pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                    <div className="flex items-center text-slate-300">
+                      <Phone className="w-3 h-3 mr-1 text-slate-500" />
+                      <span>{report.phone}</span>
+                    </div>
+                    <span>{new Date(report.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-3 flex items-center gap-2">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onResolveReport(report.id);
+                        onOpenOverrideModal(report);
                       }}
-                      className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-all shadow-sm flex items-center gap-1"
-                      title="Mark resolved and free up assigned unit"
+                      className="flex-1 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/30"
                     >
-                      <CheckCircle className="w-3 h-3" />
-                      <span>Resolve</span>
+                      Re-Route Unit
                     </button>
-                  )}
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
 
-      {/* Map Legend Overlay */}
-      <div className="absolute bottom-3 left-3 z-[400] glass-panel px-3 py-2 rounded-xl text-[11px] border border-tactical-700 text-slate-300 hidden md:block">
-        <div className="font-bold text-xs text-white mb-1 flex items-center gap-1">
-          <span>Map Radar Key</span>
+                    {report.status !== "resolved" && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onResolveReport(report.id);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/30 flex items-center gap-1"
+                        title="Mark Mission Resolved"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>Resolve</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
+
+      {/* Floating Bottom Radar Legend */}
+      <div className="absolute bottom-3 left-3 z-[400] px-3 py-2 rounded-xl bg-slate-950/90 backdrop-blur-md border border-slate-800 text-[10px] text-slate-300 hidden sm:flex items-center space-x-4 shadow-xl">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          <span>Critical SOS</span>
         </div>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
-            <span>Critical Report</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
-            <span>High Severity</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-slate-800 border border-emerald-400"></span>
-            <span>Active Resource</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-4 h-0.5 bg-cyan-400"></span>
-            <span>Dispatch Vector</span>
-          </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+          <span>High Severity</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-sm bg-slate-900 border border-emerald-400"></span>
+          <span>Active Resource</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-0.5 bg-cyan-400"></span>
+          <span>Dispatch Vector</span>
         </div>
       </div>
     </div>
