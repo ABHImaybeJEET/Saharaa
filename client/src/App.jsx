@@ -11,11 +11,24 @@ import ManualOverrideModal from "./components/ManualOverrideModal";
 import DeployResourceModal from "./components/DeployResourceModal";
 import AuditFeed from "./components/AuditFeed";
 import { socket, fetchState, resetDemoState, triggerScenarioStep, resolveReport } from "./utils/api";
-import { AlertTriangle, Bell, Sparkles, X, Radio, ArrowRight, Map, Send, MessageSquare, Building } from "lucide-react";
+import { 
+  AlertTriangle, 
+  Sparkles, 
+  X, 
+  Radio, 
+  Map, 
+  Send, 
+  MessageSquare, 
+  Building,
+  ListOrdered,
+  Layers
+} from "lucide-react";
 
 export default function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [currentView, setCurrentView] = useState("map"); // "map" | "report" | "gsm" | "resources"
+  const [mobileTab, setMobileTab] = useState("map"); // "map" | "triage" | "resources"
+  
   const [region, setRegion] = useState(null);
   const [reports, setReports] = useState([]);
   const [resources, setResources] = useState([]);
@@ -40,7 +53,6 @@ export default function App() {
   // Live Toast Notification
   const [toast, setToast] = useState(null);
 
-  // Initialize socket & fetch state
   useEffect(() => {
     fetchState()
       .then(data => {
@@ -130,7 +142,7 @@ export default function App() {
     try {
       await resetDemoState();
       setToast({
-        title: "Simulation Grid Reset",
+        title: "Grid Coordinates Reset",
         message: "Restored initial seed state and tactical units.",
         type: "info"
       });
@@ -171,7 +183,7 @@ export default function App() {
       />
 
       {/* Main Workspace */}
-      <main className="flex-1 p-3 md:p-4 space-y-3 md:space-y-4 max-w-[1700px] w-full mx-auto flex flex-col">
+      <main className="flex-1 p-2 sm:p-3 md:p-4 space-y-3 max-w-[1700px] w-full mx-auto flex flex-col">
         
         {/* Metric Cards Row */}
         <MetricCards
@@ -182,60 +194,106 @@ export default function App() {
 
         {/* VIEW 1: Full Tactical Command Center (Map + Incident Triage + Units) */}
         {currentView === "map" && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 h-auto lg:h-[calc(100vh-220px)] min-h-[540px] animate-in fade-in duration-200">
+          <div className="flex-1 flex flex-col space-y-2">
             
-            {/* Left: Triage Feed (4 cols) */}
-            <div className="lg:col-span-4 h-[460px] lg:h-full overflow-hidden">
-              <TriageQueue
-                reports={reports}
-                resources={resources}
-                allocations={allocations}
-                selectedReport={selectedReport}
-                onSelectReport={setSelectedReport}
-                onOpenOverrideModal={setOverrideModalReport}
-                onResolveReport={handleResolve}
-              />
+            {/* Mobile & Tablet Tab Toggle (visible on < xl screens) */}
+            <div className="flex xl:hidden items-center justify-between bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
+              <button
+                onClick={() => setMobileTab("map")}
+                className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                  mobileTab === "map" ? "bg-red-600 text-white font-bold" : "text-slate-400"
+                }`}
+              >
+                <Map className="w-3.5 h-3.5" />
+                <span>Map Grid</span>
+              </button>
+
+              <button
+                onClick={() => setMobileTab("triage")}
+                className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                  mobileTab === "triage" ? "bg-red-600 text-white font-bold" : "text-slate-400"
+                }`}
+              >
+                <ListOrdered className="w-3.5 h-3.5" />
+                <span>Incident Triage ({reports.filter(r => r.status !== 'resolved').length})</span>
+              </button>
+
+              <button
+                onClick={() => setMobileTab("resources")}
+                className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                  mobileTab === "resources" ? "bg-cyan-600 text-white font-bold" : "text-slate-400"
+                }`}
+              >
+                <Building className="w-3.5 h-3.5" />
+                <span>Relief Units</span>
+              </button>
             </div>
 
-            {/* Center: Interactive Map (5 cols) */}
-            <div className="lg:col-span-5 h-[460px] lg:h-full flex flex-col overflow-hidden">
-              <DisasterMap
-                region={region}
-                reports={reports}
-                resources={resources}
-                allocations={allocations}
-                imdAlerts={imdAlerts}
-                heatmapEnabled={heatmapEnabled}
-                alertsEnabled={alertsEnabled}
-                allocLinesEnabled={allocLinesEnabled}
-                selectedReport={selectedReport}
-                onSelectReport={setSelectedReport}
-                onMapClick={handleMapClick}
-                onResolveReport={handleResolve}
-                onOpenOverrideModal={setOverrideModalReport}
-              />
-            </div>
+            {/* Main Adaptive Grid Layout */}
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 flex-1 min-h-[560px]">
+              
+              {/* Left: Triage Feed (4 cols on xl, hidden on small screens unless active tab) */}
+              <div className={`xl:col-span-4 h-[560px] xl:h-full overflow-hidden ${
+                mobileTab !== "triage" ? "hidden xl:block" : "block"
+              }`}>
+                <TriageQueue
+                  reports={reports}
+                  resources={resources}
+                  allocations={allocations}
+                  selectedReport={selectedReport}
+                  onSelectReport={(rep) => {
+                    setSelectedReport(rep);
+                    setMobileTab("map"); // auto switch to map on mobile when incident clicked
+                  }}
+                  onOpenOverrideModal={setOverrideModalReport}
+                  onResolveReport={handleResolve}
+                />
+              </div>
 
-            {/* Right: Relief Resources (3 cols) */}
-            <div className="lg:col-span-3 h-[460px] lg:h-full overflow-hidden">
-              <ResourcePanel
-                resources={resources}
-                allocations={allocations}
-                onOpenDeployModal={() => {
-                  setClickedCoords(null);
-                  setIsDeployModalOpen(true);
-                }}
-              />
+              {/* Center: Interactive Map (5 cols on xl, hidden on small screens unless active tab) */}
+              <div className={`xl:col-span-5 h-[560px] xl:h-full flex flex-col overflow-hidden ${
+                mobileTab !== "map" ? "hidden xl:flex" : "flex"
+              }`}>
+                <DisasterMap
+                  region={region}
+                  reports={reports}
+                  resources={resources}
+                  allocations={allocations}
+                  imdAlerts={imdAlerts}
+                  heatmapEnabled={heatmapEnabled}
+                  alertsEnabled={alertsEnabled}
+                  allocLinesEnabled={allocLinesEnabled}
+                  selectedReport={selectedReport}
+                  onSelectReport={setSelectedReport}
+                  onMapClick={handleMapClick}
+                  onResolveReport={handleResolve}
+                  onOpenOverrideModal={setOverrideModalReport}
+                />
+              </div>
+
+              {/* Right: Relief Resources (3 cols on xl, hidden on small screens unless active tab) */}
+              <div className={`xl:col-span-3 h-[560px] xl:h-full overflow-hidden ${
+                mobileTab !== "resources" ? "hidden xl:block" : "block"
+              }`}>
+                <ResourcePanel
+                  resources={resources}
+                  allocations={allocations}
+                  onOpenDeployModal={() => {
+                    setClickedCoords(null);
+                    setIsDeployModalOpen(true);
+                  }}
+                />
+              </div>
             </div>
           </div>
         )}
 
-        {/* VIEW 2: Dedicated Citizen SOS Portal (No background map) */}
+        {/* VIEW 2: Dedicated Citizen SOS Portal */}
         {currentView === "report" && (
           <div className="flex-1 flex items-center justify-center p-2 sm:p-6 animate-in fade-in zoom-in-95 duration-200">
             <div className="w-full max-w-2xl">
               <div className="flex items-center justify-between mb-3 px-1">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                   <Send className="w-5 h-5 text-red-500" />
                   <span>Citizen Emergency SOS Portal</span>
                 </h2>
@@ -247,8 +305,7 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Render Citizen Modal in inline mode */}
-              <div className="bg-tactical-900 border border-tactical-700 rounded-2xl shadow-2xl p-4">
+              <div className="bg-tactical-900 border border-tactical-700 rounded-2xl shadow-2xl p-3 sm:p-4">
                 <CitizenReportModal
                   isOpen={true}
                   onClose={() => setCurrentView("map")}
@@ -259,12 +316,12 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW 3: Dedicated GSM Ingestion Gateway (No background map) */}
+        {/* VIEW 3: Dedicated GSM Ingestion Gateway */}
         {currentView === "gsm" && (
           <div className="flex-1 flex items-center justify-center p-2 sm:p-6 animate-in fade-in zoom-in-95 duration-200">
             <div className="w-full max-w-2xl">
               <div className="flex items-center justify-between mb-3 px-1">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                   <MessageSquare className="w-5 h-5 text-purple-400" />
                   <span>Offline GSM / SMS Ingestion Hub</span>
                 </h2>
@@ -276,7 +333,7 @@ export default function App() {
                 </button>
               </div>
 
-              <div className="bg-tactical-900 border border-tactical-700 rounded-2xl shadow-2xl p-4">
+              <div className="bg-tactical-900 border border-tactical-700 rounded-2xl shadow-2xl p-3 sm:p-4">
                 <SmsSimulatorModal
                   isOpen={true}
                   onClose={() => setCurrentView("map")}
@@ -287,11 +344,11 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW 4: Dedicated Relief Units Grid (No background map) */}
+        {/* VIEW 4: Dedicated Relief Units Grid */}
         {currentView === "resources" && (
           <div className="flex-1 space-y-4 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 <Building className="w-5 h-5 text-cyan-400" />
                 <span>Emergency Units & Relief Camps Grid</span>
               </h2>
@@ -327,11 +384,11 @@ export default function App() {
 
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-5 right-5 z-[10000] animate-in slide-in-from-bottom-5 duration-300">
-          <div className={`p-4 rounded-2xl shadow-2xl border flex items-start space-x-3 max-w-sm backdrop-blur-xl ${
-            toast.type === "match" ? "bg-cyan-950/90 border-cyan-500 text-cyan-100 shadow-cyan-500/20" :
-            toast.type === "escalate" ? "bg-amber-950/90 border-amber-500 text-amber-100 shadow-amber-500/20" :
-            toast.type === "override" ? "bg-indigo-950/90 border-indigo-500 text-indigo-100 shadow-indigo-500/20" :
+        <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:right-5 z-[10000] animate-in slide-in-from-bottom-5 duration-300">
+          <div className={`p-3.5 rounded-2xl shadow-2xl border flex items-start space-x-3 max-w-sm backdrop-blur-xl ${
+            toast.type === "match" ? "bg-cyan-950/95 border-cyan-500 text-cyan-100 shadow-cyan-500/20" :
+            toast.type === "escalate" ? "bg-amber-950/95 border-amber-500 text-amber-100 shadow-amber-500/20" :
+            toast.type === "override" ? "bg-indigo-950/95 border-indigo-500 text-indigo-100 shadow-indigo-500/20" :
             "bg-tactical-900/95 border-tactical-700 text-slate-100"
           }`}>
             <div className="p-1 rounded-lg bg-black/30 mt-0.5">
@@ -350,7 +407,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Popups & Modals (z-[9999]) */}
+      {/* Modals (z-[9999]) */}
       <CitizenReportModal
         isOpen={isCitizenModalOpen}
         onClose={() => setIsCitizenModalOpen(false)}
