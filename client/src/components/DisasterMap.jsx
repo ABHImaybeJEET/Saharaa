@@ -289,7 +289,7 @@ export default function DisasterMap({
     .filter(Boolean);
 
   return (
-    <div className="relative w-full h-full min-h-[500px] rounded-2xl overflow-hidden border border-tactical-800 shadow-2xl bg-tactical-950">
+    <div className="relative isolate z-0 w-full h-full min-h-[500px] rounded-2xl overflow-hidden border border-tactical-800 shadow-2xl bg-tactical-950">
       <MapContainer
         center={defaultCenter}
         zoom={defaultZoom}
