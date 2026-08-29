@@ -3,13 +3,75 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-app: #f4f6f8;
+    --bg-card: #ffffff;
+    --bg-card-subtle: #edf2f7;
+    --border-subtle: #e2e8f0;
+    --border-medium: #cbd5e1;
+    --border-focus: #dc2626;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --input-bg: #ffffff;
+    --input-border: #cbd5e1;
+    --input-text: #0f172a;
+    --badge-bg: #e2e8f0;
+    --badge-text: #0f172a;
+  }
+
+  .dark {
+    --bg-app: #060a12;
+    --bg-card: #0b1120;
+    --bg-card-subtle: #0f172a;
+    --border-subtle: #1e293b;
+    --border-medium: #334155;
+    --border-focus: #ef4444;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --input-bg: #060a12;
+    --input-border: #334155;
+    --input-text: #f8fafc;
+    --badge-bg: #1e293b;
+    --badge-text: #f8fafc;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+  }
+
   body {
-    @apply bg-tactical-950 text-slate-100 font-sans;
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(239, 68, 68, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.04) 0px, transparent 50%),
-      radial-gradient(at 50% 50%, rgba(15, 23, 42, 0.6) 0px, transparent 100%);
-    background-attachment: fixed;
+    background-color: var(--bg-app) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  /* Universal high-contrast inputs */
+  input[type="text"],
+  input[type="tel"],
+  input[type="number"],
+  textarea,
+  select {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--input-text);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 0.85;
   }
 }
 
@@ -19,84 +81,70 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(12, 19, 34, 0.6);
+  background: var(--bg-card-subtle);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(50, 74, 120, 0.5);
+  background: var(--border-medium);
   border-radius: 9999px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(239, 68, 68, 0.6);
-}
 
-/* Leaflet Container and Custom Elements */
+/* Leaflet Container & Markers */
 .leaflet-container {
-  width: 100%;
-  height: 100%;
-  background: #020617 !important;
-  font-family: inherit;
+  width: 100% !important;
+  height: 100% !important;
+  background: var(--bg-card-subtle) !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  z-index: 1;
 }
 
-/* Noire Leaflet Dark Popup Overrides */
+/* Leaflet Popups */
 .leaflet-popup-content-wrapper {
-  background: rgba(8, 14, 26, 0.94) !important;
-  color: #f1f5f9 !important;
-  border: 1px solid rgba(56, 189, 248, 0.25) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(6, 182, 212, 0.1) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.3) !important;
   padding: 0 !important;
 }
 
 .leaflet-popup-content {
   margin: 0 !important;
-  line-height: 1.4 !important;
+  line-height: 1.5 !important;
+  font-size: 13px !important;
 }
 
 .leaflet-popup-tip {
-  background: rgba(8, 14, 26, 0.94) !important;
-  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-subtle) !important;
 }
 
 .leaflet-popup-close-button {
-  color: #94a3b8 !important;
-  padding: 8px !important;
+  color: var(--text-muted) !important;
+  padding: 6px !important;
   top: 6px !important;
   right: 6px !important;
 }
 
-.leaflet-popup-close-button:hover {
-  color: #ffffff !important;
-}
-
-/* Custom Tooltips */
+/* Map Tooltips */
 .leaflet-tooltip {
-  background: rgba(3, 7, 18, 0.92) !important;
-  color: #e2e8f0 !important;
-  border: 1px solid rgba(6, 182, 212, 0.4) !important;
-  border-radius: 10px !important;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.6) !important;
-  backdrop-filter: blur(8px) !important;
-  padding: 6px 10px !important;
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 4px 8px !important;
 }
 
-.leaflet-tooltip-top:before,
-.leaflet-tooltip-bottom:before,
-.leaflet-tooltip-left:before,
-.leaflet-tooltip-right:before {
-  border-top-color: rgba(3, 7, 18, 0.92) !important;
-}
-
-/* Custom Animated Marker Styling */
+/* Marker Pulse */
 .pulse-pin-critical {
   position: relative;
 }
 .pulse-pin-critical::before {
   content: '';
   position: absolute;
-  top: -12px;
-  left: -12px;
+  top: -8px;
+  left: -8px;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -105,59 +153,18 @@
   pointer-events: none;
 }
 
-.pulse-pin-high::before {
-  content: '';
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(249, 115, 22, 0.35);
-  animation: pulse-ring 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-  pointer-events: none;
-}
-
 @keyframes pulse-ring {
-  0% {
-    transform: scale(0.6);
-    opacity: 0.9;
-  }
-  100% {
-    transform: scale(1.8);
-    opacity: 0;
-  }
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.6); opacity: 0; }
 }
 
-/* Animated polyline dash for active allocation paths */
+/* Allocation Polyline Animation */
 .allocation-dash-line {
-  stroke-dasharray: 8, 8;
+  stroke-dasharray: 6, 6;
   animation: dash-flow 1.2s linear infinite;
-  filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.6));
 }
 
 @keyframes dash-flow {
-  from {
-    stroke-dashoffset: 32;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-/* Custom Glassmorphism Box */
-.glass-panel {
-  background: rgba(8, 14, 26, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(50, 74, 120, 0.25);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
-}
-
-.glass-panel-noire {
-  background: rgba(3, 7, 18, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(30, 41, 59, 0.7);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8);
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
 }
