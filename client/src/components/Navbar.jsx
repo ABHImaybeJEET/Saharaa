@@ -1,251 +1,184 @@
 // client/src/components/Navbar.jsx
-import React, { useState } from "react";
+import React from "react";
 import { 
   ShieldAlert, 
-  Radio, 
-  Send, 
-  MessageSquare, 
   RotateCcw, 
-  Layers, 
-  Flame, 
   Sparkles, 
-  ChevronDown, 
   Map, 
-  Building, 
-  Compass
+  Users, 
+  Sun, 
+  Moon, 
+  Radio
 } from "lucide-react";
+import { soundEngine } from "../utils/soundEffects";
 
 export default function Navbar({
   isConnected,
-  currentView = "map",
-  setCurrentView,
-  onOpenCitizenReport,
-  onOpenSmsSimulator,
+  currentMode = "authority", // "authority" | "citizen"
+  setCurrentMode,
+  onOpenBroadcastModal,
+  onOpenDemoTour,
   onResetDemo,
-  onTriggerScenario,
-  activeScenarioStep,
-  heatmapEnabled,
-  setHeatmapEnabled,
-  alertsEnabled,
-  setAlertsEnabled,
-  allocLinesEnabled,
-  setAllocLinesEnabled
+  theme = "dark",
+  setTheme,
+  lang = "en",
+  setLang,
+  translations
 }) {
-  const [drillMenuOpen, setDrillMenuOpen] = useState(false);
+  const t = translations ? (translations[lang] || translations.en) : {};
+
+  const toggleTheme = () => {
+    soundEngine.playUiClick();
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+  };
 
   return (
-    <header className="bg-tactical-900/95 border-b border-tactical-700/50 backdrop-blur-md sticky top-0 z-[1000] px-4 py-2.5 shadow-sm">
-      <div className="flex items-center justify-between gap-3 max-w-[1700px] mx-auto">
+    <header className="w-full bg-theme-card text-theme-primary border-b border-theme-border sticky top-0 z-[1000] px-3 sm:px-4 py-2.5 shadow-sm transition-colors duration-200">
+      <div className="w-full max-w-[1700px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
         
-        {/* Brand & Connection Badge */}
-        <div className="flex items-center space-x-3">
+        {/* Left Row on Mobile: Brand + Mode Toggle + Essential Tools */}
+        <div className="w-full sm:w-auto flex items-center justify-between gap-2">
+          
+          {/* Brand Logo */}
           <div 
-            onClick={() => setCurrentView("map")}
-            className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-red-600 to-rose-700 shadow-md shadow-red-600/20 text-white font-bold cursor-pointer"
+            onClick={() => {
+              soundEngine.playUiClick();
+              setCurrentMode("authority");
+            }}
+            className="flex items-center space-x-2 cursor-pointer select-none shrink-0"
           >
-            <ShieldAlert className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h1 
-                onClick={() => setCurrentView("map")}
-                className="text-base font-extrabold tracking-wider text-white cursor-pointer"
-              >
-                SAHARAA <span className="text-[10px] px-2 py-0.5 rounded-md bg-red-950/80 text-red-400 border border-red-800/60 font-mono font-bold">COMMAND</span>
-              </h1>
-              <div className="flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-mono">
-                <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'}`}></span>
-                <span className={isConnected ? "text-emerald-300" : "text-rose-400"}>
-                  {isConnected ? "ACTIVE" : "OFFLINE"}
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-red-600 via-rose-600 to-amber-600 shadow-md shadow-red-600/30 flex items-center justify-center text-white font-bold">
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-1.5">
+                <span className="text-sm font-black tracking-wider text-theme-primary font-sans">
+                  SAHARAA
                 </span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 font-mono font-bold">
+                  PS-05
+                </span>
+                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} title={isConnected ? "Grid Online" : "Grid Offline"}></span>
               </div>
             </div>
-            <p className="text-[10px] text-slate-400 font-medium">
-              Geospatial Crisis Coordination & Resource Allocation Mesh
-            </p>
           </div>
-        </div>
 
-        {/* Center: Main View Switcher Tabs */}
-        <div className="flex items-center space-x-1 bg-tactical-950/90 p-1 rounded-xl border border-tactical-800/80 text-xs font-semibold">
-          <button
-            onClick={() => setCurrentView("map")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all ${
-              currentView === "map"
-                ? "bg-red-600 text-white shadow-sm font-bold"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <Map className="w-3.5 h-3.5" />
-            <span>Tactical Map</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView("report")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all ${
-              currentView === "report"
-                ? "bg-red-600 text-white shadow-sm font-bold"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span>Citizen SOS</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView("gsm")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all ${
-              currentView === "gsm"
-                ? "bg-purple-600 text-white shadow-sm font-bold"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>GSM Ingestion</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView("resources")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all ${
-              currentView === "resources"
-                ? "bg-cyan-600 text-white shadow-sm font-bold"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            <Building className="w-3.5 h-3.5" />
-            <span>Relief Units</span>
-          </button>
-        </div>
-
-        {/* Right: Map Layers & Scenario Drills */}
-        <div className="flex items-center space-x-2">
-          
-          {/* Map Layer Toggles (Visible in map view) */}
-          {currentView === "map" && (
-            <div className="hidden xl:flex items-center space-x-1 bg-tactical-950/80 p-1 rounded-xl border border-tactical-800/80 text-xs">
-              <button
-                onClick={() => setAllocLinesEnabled(!allocLinesEnabled)}
-                className={`p-1.5 rounded-lg transition-all ${
-                  allocLinesEnabled
-                    ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-                title="Toggle live dispatch vectors"
-              >
-                <Radio className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                onClick={() => setHeatmapEnabled(!heatmapEnabled)}
-                className={`p-1.5 rounded-lg transition-all ${
-                  heatmapEnabled
-                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-                title="Toggle severity heatmap"
-              >
-                <Flame className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                onClick={() => setAlertsEnabled(!alertsEnabled)}
-                className={`p-1.5 rounded-lg transition-all ${
-                  alertsEnabled
-                    ? "bg-red-500/20 text-red-300 border border-red-500/40"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-                title="Toggle IMD hazard polygons"
-              >
-                <Layers className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
-          {/* Tactical Scenarios Dropdown */}
-          <div className="relative">
+          {/* Mode Switcher (Authority vs Citizen) */}
+          <div className="flex items-center bg-theme-subtle p-1 rounded-xl border border-theme-border text-xs font-bold shrink-0">
             <button
-              onClick={() => setDrillMenuOpen(!drillMenuOpen)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-tactical-800 hover:bg-tactical-700 text-slate-200 border border-tactical-700 text-xs font-semibold transition-all"
+              onClick={() => {
+                soundEngine.playUiClick();
+                setCurrentMode("authority");
+              }}
+              className={`flex items-center space-x-1 px-2.5 sm:px-3 py-1 rounded-lg transition-all ${
+                currentMode === "authority"
+                  ? "bg-red-600 text-white shadow-sm font-bold"
+                  : "text-theme-secondary hover:text-theme-primary"
+              }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Tactical Drills</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              <Map className="w-3.5 h-3.5" />
+              <span className="text-xs">Authority</span>
             </button>
 
-            {drillMenuOpen && (
-              <div 
-                className="absolute right-0 mt-2 w-64 rounded-2xl bg-tactical-900 border border-tactical-700 shadow-2xl p-2 z-[1100] animate-in fade-in zoom-in-95 font-sans"
-                onMouseLeave={() => setDrillMenuOpen(false)}
-              >
-                <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold border-b border-tactical-800 mb-1">
-                  Disaster Response Drills
-                </div>
-                
-                <button
-                  onClick={() => {
-                    setCurrentView("map");
-                    onTriggerScenario(1);
-                    setDrillMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition-all flex flex-col ${
-                    activeScenarioStep === 1 ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold" : "text-slate-300 hover:bg-tactical-800"
-                  }`}
-                >
-                  <span className="font-semibold text-white">1. Flash Flood Surge</span>
-                  <span className="text-[10px] text-slate-400">Triggers web SOS & automatic boat dispatch</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setCurrentView("map");
-                    onTriggerScenario(2);
-                    setDrillMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition-all flex flex-col mt-1 ${
-                    activeScenarioStep === 2 ? "bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold" : "text-slate-300 hover:bg-tactical-800"
-                  }`}
-                >
-                  <span className="font-semibold text-white">2. Offline GSM / SMS SOS</span>
-                  <span className="text-[10px] text-slate-400">Ingests feature-phone text from cutoff zone</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setCurrentView("map");
-                    onTriggerScenario(3);
-                    setDrillMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition-all flex flex-col mt-1 ${
-                    activeScenarioStep === 3 ? "bg-red-500/20 text-red-300 border border-red-500/40 font-bold" : "text-slate-300 hover:bg-tactical-800"
-                  }`}
-                >
-                  <span className="font-semibold text-white">3. Grid Saturation Crisis</span>
-                  <span className="text-[10px] text-slate-400">Tests capacity limits & triggers escalation</span>
-                </button>
-
-                <div className="border-t border-tactical-800 mt-1 pt-1">
-                  <button
-                    onClick={() => {
-                      onResetDemo();
-                      setDrillMenuOpen(false);
-                    }}
-                    className="w-full text-left px-2.5 py-1.5 rounded-xl text-xs text-slate-400 hover:text-white hover:bg-tactical-800 flex items-center space-x-1.5 transition-all"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Reset Scenario Grid</span>
-                  </button>
-                </div>
-              </div>
-            )}
+            <button
+              onClick={() => {
+                soundEngine.playUiClick();
+                setCurrentMode("citizen");
+              }}
+              className={`flex items-center space-x-1 px-2.5 sm:px-3 py-1 rounded-lg transition-all ${
+                currentMode === "citizen"
+                  ? "bg-red-600 text-white shadow-sm font-bold"
+                  : "text-theme-secondary hover:text-theme-primary"
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span className="text-xs">Citizen</span>
+            </button>
           </div>
 
-          {/* Quick SOS Trigger */}
+          {/* Mobile Right Controls: Theme + Demo Script trigger */}
+          <div className="flex sm:hidden items-center space-x-1">
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 rounded-lg border border-theme-border bg-theme-subtle text-amber-500 dark:text-amber-400"
+              title="Toggle Light/Dark Theme"
+            >
+              {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5 text-indigo-600" />}
+            </button>
+
+            <button
+              onClick={() => {
+                soundEngine.playUiClick();
+                if (onOpenDemoTour) onOpenDemoTour();
+              }}
+              className="p-1.5 rounded-lg bg-amber-500 text-white shadow-sm"
+              title="1-Click Demo Tour"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Right Controls for Tablet & Desktop */}
+        <div className="hidden sm:flex items-center space-x-2 shrink-0">
+          
+          {/* Interactive Demo Tour */}
           <button
-            onClick={onOpenCitizenReport}
-            className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold shadow-md shadow-red-600/30 transition-all active:scale-95"
+            onClick={() => {
+              soundEngine.playUiClick();
+              if (onOpenDemoTour) onOpenDemoTour();
+            }}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold transition-all shadow-sm active:scale-95"
+            title="Run 5-Step PS-05 End-to-End Demo"
           >
-            <Send className="w-3.5 h-3.5" />
-            <span>+ SOS</span>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>1-Click Demo Tour</span>
+          </button>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-1.5 rounded-xl border border-theme-border bg-theme-subtle text-amber-500 dark:text-amber-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer"
+            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+          </button>
+
+          {/* Language Selector */}
+          <div className="flex items-center bg-theme-subtle p-0.5 rounded-xl border border-theme-border text-xs font-mono font-bold">
+            {[
+              { code: "en", label: "EN" },
+              { code: "hi", label: "हि" },
+              { code: "mr", label: "म" }
+            ].map(l => (
+              <button
+                key={l.code}
+                onClick={() => {
+                  setLang(l.code);
+                  soundEngine.playUiClick();
+                }}
+                className={`px-2 py-0.5 rounded-lg transition-all ${
+                  lang === l.code
+                    ? "bg-red-600 text-white font-black shadow-sm"
+                    : "text-theme-muted hover:text-theme-primary"
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Reset Grid Coordinates */}
+          <button
+            onClick={() => {
+              soundEngine.playResolveTone();
+              onResetDemo();
+            }}
+            className="p-1.5 rounded-xl border border-theme-border bg-theme-subtle text-theme-muted hover:text-cyan-500 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer"
+            title="Reset Grid to Initial State"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

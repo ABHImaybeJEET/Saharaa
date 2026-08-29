@@ -1,58 +1,73 @@
 // client/src/App.jsx
 import React, { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
-import MetricCards from "./components/MetricCards";
-import DisasterMap from "./components/DisasterMap";
-import TriageQueue from "./components/TriageQueue";
-import ResourcePanel from "./components/ResourcePanel";
+import AuthorityDashboard from "./components/AuthorityDashboard";
+import CitizenPortal from "./components/CitizenPortal";
+import BroadcastAlertModal from "./components/BroadcastAlertModal";
+import DemoTourModal from "./components/DemoTourModal";
 import CitizenReportModal from "./components/CitizenReportModal";
 import SmsSimulatorModal from "./components/SmsSimulatorModal";
-import ManualOverrideModal from "./components/ManualOverrideModal";
+import SitRepModal from "./components/SitRepModal";
 import DeployResourceModal from "./components/DeployResourceModal";
-import AuditFeed from "./components/AuditFeed";
-import { socket, fetchState, resetDemoState, triggerScenarioStep, resolveReport } from "./utils/api";
+import { socket, fetchState, resetDemoState, resolveReport } from "./utils/api";
+import { soundEngine } from "./utils/soundEffects";
+import { TRANSLATIONS } from "./utils/translations";
 import { 
   AlertTriangle, 
   Sparkles, 
   X, 
   Radio, 
-  Map, 
-  Send, 
-  MessageSquare, 
-  Building,
-  ListOrdered,
-  Layers
+  Zap, 
+  CheckCircle,
+  Phone
 } from "lucide-react";
 
 export default function App() {
   const [isConnected, setIsConnected] = useState(false);
-  const [currentView, setCurrentView] = useState("map"); // "map" | "report" | "gsm" | "resources"
-  const [mobileTab, setMobileTab] = useState("map"); // "map" | "triage" | "resources"
-  
+  const [currentMode, setCurrentMode] = useState("authority"); // "authority" | "citizen"
+  const [lang, setLang] = useState(() => localStorage.getItem("saharaa_lang") || "en");
+  const [theme, setTheme] = useState(() => localStorage.getItem("saharaa_theme") || "dark");
+
   const [region, setRegion] = useState(null);
   const [reports, setReports] = useState([]);
   const [resources, setResources] = useState([]);
   const [allocations, setAllocations] = useState([]);
   const [imdAlerts, setImdAlerts] = useState([]);
+  const [broadcastAlerts, setBroadcastAlerts] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [metrics, setMetrics] = useState({});
 
-  // UI state & layer toggles
-  const [heatmapEnabled, setHeatmapEnabled] = useState(false);
-  const [alertsEnabled, setAlertsEnabled] = useState(true);
-  const [allocLinesEnabled, setAllocLinesEnabled] = useState(true);
-  const [activeScenarioStep, setActiveScenarioStep] = useState(null);
-  
+  // Modals & UI States
   const [selectedReport, setSelectedReport] = useState(null);
-  const [overrideModalReport, setOverrideModalReport] = useState(null);
+  const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
+  const [isDemoTourOpen, setIsDemoTourOpen] = useState(false);
   const [isCitizenModalOpen, setIsCitizenModalOpen] = useState(false);
   const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
+  const [isSitRepOpen, setIsSitRepOpen] = useState(false);
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
-  const [clickedCoords, setClickedCoords] = useState(null);
 
   // Live Toast Notification
   const [toast, setToast] = useState(null);
 
+  // Theme Sync
+  useEffect(() => {
+    localStorage.setItem("saharaa_theme", theme);
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+      root.classList.remove("light");
+    } else {
+      root.classList.add("light");
+      root.classList.remove("dark");
+    }
+  }, [theme]);
+
+  // Language Sync
+  useEffect(() => {
+    localStorage.setItem("saharaa_lang", lang);
+  }, [lang]);
+
+  // Initial State Fetch & Real-Time Socket Connection
   useEffect(() => {
     fetchState()
       .then(data => {
@@ -60,11 +75,12 @@ export default function App() {
         setReports(data.reports || []);
         setResources(data.resources || []);
         setAllocations(data.allocations || []);
+        setBroadcastAlerts(data.broadcastAlerts || []);
         setImdAlerts(data.imdAlerts || []);
         setAuditLogs(data.auditLogs || []);
         setMetrics(data.metrics || {});
       })
-      .catch(err => console.error("Initial state load error:", err));
+      .catch(err => console.error("Initial load error:", err));
 
     socket.on("connect", () => setIsConnected(true));
     socket.on("disconnect", () => setIsConnected(false));
@@ -74,6 +90,7 @@ export default function App() {
       setReports(data.reports || []);
       setResources(data.resources || []);
       setAllocations(data.allocations || []);
+      setBroadcastAlerts(data.broadcastAlerts || []);
       setImdAlerts(data.imdAlerts || []);
       setAuditLogs(data.auditLogs || []);
       setMetrics(data.metrics || {});
@@ -84,6 +101,7 @@ export default function App() {
         setReports(payload.data.reports || []);
         setResources(payload.data.resources || []);
         setAllocations(payload.data.allocations || []);
+        setBroadcastAlerts(payload.data.broadcastAlerts || []);
         setAuditLogs(payload.data.auditLogs || []);
         setMetrics(payload.data.metrics || {});
       }
@@ -91,19 +109,36 @@ export default function App() {
       if (payload.type === "report_created" || payload.type === "sms_report_created") {
         const rep = payload.latestReport;
         const alloc = payload.allocationResult;
+        
+        if (rep?.severity === "critical") {
+          soundEngine.playEmergencyAlert();
+        } else {
+          soundEngine.playDispatchTone();
+        }
+
         setToast({
-          title: `New ${rep.severity.toUpperCase()} ${rep.category.toUpperCase()} Incident`,
+          title: `New ${rep.severity.toUpperCase()} Emergency: ${rep.location_name || 'Incident Site'}`,
           message: alloc?.success 
-            ? `Auto-dispatched to ${alloc.resource?.name} (${alloc.allocation?.distance_km} km)`
-            : `Could not auto-assign: ${alloc?.reason || 'Escalated to human queue'}`,
+            ? `Recommended & auto-matched to ${alloc.resource?.name} (${alloc.allocation?.distance_km} km)`
+            : `Needs authority action: ${alloc?.reason || 'Capacity limit'}`,
           type: alloc?.success ? "match" : "escalate"
         });
-      } else if (payload.type === "allocation_overridden") {
+      } else if (payload.type === "alert_broadcasted") {
+        soundEngine.playEmergencyAlert();
         setToast({
-          title: "Dispatcher Override Applied",
-          message: "Unit re-routed successfully.",
-          type: "override"
+          title: `📢 ${payload.alert.level.toUpperCase()} ALERT: ${payload.alert.title}`,
+          message: payload.alert.message,
+          type: "alert"
         });
+      } else if (payload.type === "allocation_overridden") {
+        soundEngine.playDispatchTone();
+        setToast({
+          title: "Resource Dispatched Successfully",
+          message: "Team en route with live spatial tracking.",
+          type: "match"
+        });
+      } else if (payload.type === "report_resolved") {
+        soundEngine.playResolveTone();
       }
     });
 
@@ -122,28 +157,14 @@ export default function App() {
     }
   }, [toast]);
 
-  const handleMapClick = (latlng) => {
-    setClickedCoords(latlng);
-    setIsCitizenModalOpen(true);
-  };
-
-  const handleTriggerScenario = async (step) => {
-    setActiveScenarioStep(step);
-    try {
-      await triggerScenarioStep(step);
-    } catch (err) {
-      console.error("Scenario trigger error:", err);
-    }
-  };
-
   const handleResetDemo = async () => {
-    setActiveScenarioStep(null);
     setSelectedReport(null);
+    soundEngine.playResolveTone();
     try {
       await resetDemoState();
       setToast({
-        title: "Grid Coordinates Reset",
-        message: "Restored initial seed state and tactical units.",
+        title: "Grid Restored",
+        message: "Default state and resource locations reset.",
         type: "info"
       });
     } catch (err) {
@@ -152,249 +173,83 @@ export default function App() {
   };
 
   const handleResolve = async (reportId) => {
+    soundEngine.playResolveTone();
     try {
       await resolveReport(reportId);
+      setSelectedReport(null);
     } catch (err) {
       console.error("Resolve error:", err);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-tactical-950 text-slate-100 font-sans">
-      {/* Top Tactical Navigation Bar */}
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
+      theme === "dark" ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900"
+    }`}>
+      
+      {/* 1. Top Navigation Bar */}
       <Navbar
         isConnected={isConnected}
-        currentView={currentView}
-        setCurrentView={setCurrentView}
-        onOpenCitizenReport={() => {
-          setClickedCoords(null);
-          setIsCitizenModalOpen(true);
-        }}
-        onOpenSmsSimulator={() => setIsSmsModalOpen(true)}
+        currentMode={currentMode}
+        setCurrentMode={setCurrentMode}
+        onOpenBroadcastModal={() => setIsBroadcastModalOpen(true)}
+        onOpenDemoTour={() => setIsDemoTourOpen(true)}
         onResetDemo={handleResetDemo}
-        onTriggerScenario={handleTriggerScenario}
-        activeScenarioStep={activeScenarioStep}
-        heatmapEnabled={heatmapEnabled}
-        setHeatmapEnabled={setHeatmapEnabled}
-        alertsEnabled={alertsEnabled}
-        setAlertsEnabled={setAlertsEnabled}
-        allocLinesEnabled={allocLinesEnabled}
-        setAllocLinesEnabled={setAllocLinesEnabled}
+        theme={theme}
+        setTheme={setTheme}
+        lang={lang}
+        setLang={setLang}
+        translations={TRANSLATIONS}
       />
 
-      {/* Main Workspace */}
-      <main className="flex-1 p-2 sm:p-3 md:p-4 space-y-3 max-w-[1700px] w-full mx-auto flex flex-col">
-        
-        {/* Metric Cards Row */}
-        <MetricCards
-          metrics={metrics}
-          totalReports={reports.length}
-          activeAllocations={allocations.filter(a => a.status === 'active').length}
-        />
-
-        {/* VIEW 1: Full Tactical Command Center (Map + Incident Triage + Units) */}
-        {currentView === "map" && (
-          <div className="flex-1 flex flex-col space-y-2">
-            
-            {/* Mobile & Tablet Tab Toggle (visible on < xl screens) */}
-            <div className="flex xl:hidden items-center justify-between bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
-              <button
-                onClick={() => setMobileTab("map")}
-                className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                  mobileTab === "map" ? "bg-red-600 text-white font-bold" : "text-slate-400"
-                }`}
-              >
-                <Map className="w-3.5 h-3.5" />
-                <span>Map Grid</span>
-              </button>
-
-              <button
-                onClick={() => setMobileTab("triage")}
-                className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                  mobileTab === "triage" ? "bg-red-600 text-white font-bold" : "text-slate-400"
-                }`}
-              >
-                <ListOrdered className="w-3.5 h-3.5" />
-                <span>Incident Triage ({reports.filter(r => r.status !== 'resolved').length})</span>
-              </button>
-
-              <button
-                onClick={() => setMobileTab("resources")}
-                className={`flex-1 py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                  mobileTab === "resources" ? "bg-cyan-600 text-white font-bold" : "text-slate-400"
-                }`}
-              >
-                <Building className="w-3.5 h-3.5" />
-                <span>Relief Units</span>
-              </button>
-            </div>
-
-            {/* Main Adaptive Grid Layout */}
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 flex-1 min-h-[560px]">
-              
-              {/* Left: Triage Feed (4 cols on xl, hidden on small screens unless active tab) */}
-              <div className={`xl:col-span-4 h-[560px] xl:h-full overflow-hidden ${
-                mobileTab !== "triage" ? "hidden xl:block" : "block"
-              }`}>
-                <TriageQueue
-                  reports={reports}
-                  resources={resources}
-                  allocations={allocations}
-                  selectedReport={selectedReport}
-                  onSelectReport={(rep) => {
-                    setSelectedReport(rep);
-                    setMobileTab("map"); // auto switch to map on mobile when incident clicked
-                  }}
-                  onOpenOverrideModal={setOverrideModalReport}
-                  onResolveReport={handleResolve}
-                />
-              </div>
-
-              {/* Center: Interactive Map (5 cols on xl, hidden on small screens unless active tab) */}
-              <div className={`xl:col-span-5 h-[560px] xl:h-full flex flex-col overflow-hidden ${
-                mobileTab !== "map" ? "hidden xl:flex" : "flex"
-              }`}>
-                <DisasterMap
-                  region={region}
-                  reports={reports}
-                  resources={resources}
-                  allocations={allocations}
-                  imdAlerts={imdAlerts}
-                  heatmapEnabled={heatmapEnabled}
-                  alertsEnabled={alertsEnabled}
-                  allocLinesEnabled={allocLinesEnabled}
-                  selectedReport={selectedReport}
-                  onSelectReport={setSelectedReport}
-                  onMapClick={handleMapClick}
-                  onResolveReport={handleResolve}
-                  onOpenOverrideModal={setOverrideModalReport}
-                />
-              </div>
-
-              {/* Right: Relief Resources (3 cols on xl, hidden on small screens unless active tab) */}
-              <div className={`xl:col-span-3 h-[560px] xl:h-full overflow-hidden ${
-                mobileTab !== "resources" ? "hidden xl:block" : "block"
-              }`}>
-                <ResourcePanel
-                  resources={resources}
-                  allocations={allocations}
-                  onOpenDeployModal={() => {
-                    setClickedCoords(null);
-                    setIsDeployModalOpen(true);
-                  }}
-                />
-              </div>
-            </div>
-          </div>
+      {/* 2. Main Body: Authority Command vs Citizen Portal */}
+      <main className="flex-1 p-2 sm:p-3 md:p-4 max-w-[1700px] w-full mx-auto flex flex-col">
+        {currentMode === "authority" ? (
+          <AuthorityDashboard
+            region={region}
+            reports={reports}
+            resources={resources}
+            allocations={allocations}
+            imdAlerts={imdAlerts}
+            broadcastAlerts={broadcastAlerts}
+            metrics={metrics}
+            selectedReport={selectedReport}
+            setSelectedReport={setSelectedReport}
+            onOpenBroadcastModal={() => setIsBroadcastModalOpen(true)}
+            onOpenDeployModal={() => setIsDeployModalOpen(true)}
+            onOpenCitizenModal={() => setIsCitizenModalOpen(true)}
+            onOpenSmsModal={() => setIsSmsModalOpen(true)}
+            onOpenSitRep={() => setIsSitRepOpen(true)}
+            onResolveReport={handleResolve}
+            theme={theme}
+            lang={lang}
+            translations={TRANSLATIONS}
+          />
+        ) : (
+          <CitizenPortal
+            resources={resources}
+            broadcastAlerts={broadcastAlerts}
+            imdAlerts={imdAlerts}
+            onOpenSmsSimulator={() => setIsSmsModalOpen(true)}
+            lang={lang}
+            translations={TRANSLATIONS}
+          />
         )}
-
-        {/* VIEW 2: Dedicated Citizen SOS Portal */}
-        {currentView === "report" && (
-          <div className="flex-1 flex items-center justify-center p-2 sm:p-6 animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-full max-w-2xl">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                  <Send className="w-5 h-5 text-red-500" />
-                  <span>Citizen Emergency SOS Portal</span>
-                </h2>
-                <button
-                  onClick={() => setCurrentView("map")}
-                  className="text-xs px-3 py-1.5 rounded-xl bg-tactical-800 hover:bg-tactical-700 text-slate-300 font-semibold"
-                >
-                  Return to Map
-                </button>
-              </div>
-
-              <div className="bg-tactical-900 border border-tactical-700 rounded-2xl shadow-2xl p-3 sm:p-4">
-                <CitizenReportModal
-                  isOpen={true}
-                  onClose={() => setCurrentView("map")}
-                  onSuccess={() => setCurrentView("map")}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* VIEW 3: Dedicated GSM Ingestion Gateway */}
-        {currentView === "gsm" && (
-          <div className="flex-1 flex items-center justify-center p-2 sm:p-6 animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-full max-w-2xl">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-purple-400" />
-                  <span>Offline GSM / SMS Ingestion Hub</span>
-                </h2>
-                <button
-                  onClick={() => setCurrentView("map")}
-                  className="text-xs px-3 py-1.5 rounded-xl bg-tactical-800 hover:bg-tactical-700 text-slate-300 font-semibold"
-                >
-                  Return to Map
-                </button>
-              </div>
-
-              <div className="bg-tactical-900 border border-tactical-700 rounded-2xl shadow-2xl p-3 sm:p-4">
-                <SmsSimulatorModal
-                  isOpen={true}
-                  onClose={() => setCurrentView("map")}
-                  onSuccess={() => setCurrentView("map")}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* VIEW 4: Dedicated Relief Units Grid */}
-        {currentView === "resources" && (
-          <div className="flex-1 space-y-4 animate-in fade-in duration-200">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                <Building className="w-5 h-5 text-cyan-400" />
-                <span>Emergency Units & Relief Camps Grid</span>
-              </h2>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setIsDeployModalOpen(true)}
-                  className="text-xs px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-md shadow-emerald-600/30"
-                >
-                  + Deploy New Unit
-                </button>
-                <button
-                  onClick={() => setCurrentView("map")}
-                  className="text-xs px-3 py-1.5 rounded-xl bg-tactical-800 hover:bg-tactical-700 text-slate-300 font-semibold"
-                >
-                  Return to Map
-                </button>
-              </div>
-            </div>
-
-            <div className="h-[650px]">
-              <ResourcePanel
-                resources={resources}
-                allocations={allocations}
-                onOpenDeployModal={() => setIsDeployModalOpen(true)}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Real-time Decision Audit Stream */}
-        <AuditFeed logs={auditLogs} />
       </main>
 
-      {/* Toast Notification */}
+      {/* 3. Toast Notifications */}
       {toast && (
         <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:right-5 z-[10000] animate-in slide-in-from-bottom-5 duration-300">
           <div className={`p-3.5 rounded-2xl shadow-2xl border flex items-start space-x-3 max-w-sm backdrop-blur-xl ${
+            toast.type === "alert" ? "bg-red-950/95 border-red-500 text-red-100 shadow-red-500/20" :
             toast.type === "match" ? "bg-cyan-950/95 border-cyan-500 text-cyan-100 shadow-cyan-500/20" :
             toast.type === "escalate" ? "bg-amber-950/95 border-amber-500 text-amber-100 shadow-amber-500/20" :
-            toast.type === "override" ? "bg-indigo-950/95 border-indigo-500 text-indigo-100 shadow-indigo-500/20" :
-            "bg-tactical-900/95 border-tactical-700 text-slate-100"
+            "bg-slate-900/95 border-slate-700 text-slate-100"
           }`}>
-            <div className="p-1 rounded-lg bg-black/30 mt-0.5">
-              {toast.type === "match" ? <Radio className="w-4 h-4 text-cyan-400 animate-pulse" /> :
-               toast.type === "escalate" ? <AlertTriangle className="w-4 h-4 text-amber-400 animate-bounce" /> :
-               <Sparkles className="w-4 h-4 text-indigo-400" />}
+            <div className="p-1 rounded-lg bg-black/30 mt-0.5 shrink-0">
+              {toast.type === "alert" ? <Radio className="w-4 h-4 text-red-400 animate-pulse" /> :
+               toast.type === "match" ? <Zap className="w-4 h-4 text-cyan-400" /> :
+               <AlertTriangle className="w-4 h-4 text-amber-400" />}
             </div>
             <div className="flex-1 text-xs">
               <div className="font-bold text-white tracking-wide">{toast.title}</div>
@@ -407,30 +262,51 @@ export default function App() {
         </div>
       )}
 
-      {/* Modals (z-[9999]) */}
+      {/* 4. Modals */}
+      <BroadcastAlertModal
+        isOpen={isBroadcastModalOpen}
+        onClose={() => setIsBroadcastModalOpen(false)}
+        lang={lang}
+        translations={TRANSLATIONS}
+      />
+
+      <DemoTourModal
+        isOpen={isDemoTourOpen}
+        onClose={() => setIsDemoTourOpen(false)}
+        onSelectView={(view) => setCurrentMode(view)}
+        lang={lang}
+        translations={TRANSLATIONS}
+      />
+
       <CitizenReportModal
         isOpen={isCitizenModalOpen}
         onClose={() => setIsCitizenModalOpen(false)}
-        initialCoords={clickedCoords}
+        lang={lang}
+        translations={TRANSLATIONS}
       />
 
       <SmsSimulatorModal
         isOpen={isSmsModalOpen}
         onClose={() => setIsSmsModalOpen(false)}
+        lang={lang}
+        translations={TRANSLATIONS}
       />
 
-      <ManualOverrideModal
-        isOpen={!!overrideModalReport}
-        onClose={() => setOverrideModalReport(null)}
-        report={overrideModalReport}
+      <SitRepModal
+        isOpen={isSitRepOpen}
+        onClose={() => setIsSitRepOpen(false)}
+        region={region}
+        reports={reports}
         resources={resources}
         allocations={allocations}
+        metrics={metrics}
       />
 
       <DeployResourceModal
         isOpen={isDeployModalOpen}
         onClose={() => setIsDeployModalOpen(false)}
-        initialCoords={clickedCoords}
+        lang={lang}
+        translations={TRANSLATIONS}
       />
     </div>
   );

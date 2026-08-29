@@ -7,6 +7,7 @@ import {
   Popup, 
   Polygon, 
   Polyline, 
+  Circle,
   Tooltip, 
   useMap, 
   useMapEvents 
@@ -17,19 +18,13 @@ import "leaflet.heat";
 import { 
   AlertTriangle, 
   Phone, 
-  Clock, 
-  Send, 
   CheckCircle, 
   Crosshair, 
-  Layers, 
   Radio, 
-  Flame, 
   Zap, 
-  HelpCircle, 
-  Info,
-  Filter,
-  Eye
+  Navigation
 } from "lucide-react";
+import { soundEngine } from "../utils/soundEffects";
 
 // Fix default leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -39,13 +34,69 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// Highly Legible, Cyber-Tactical Incident Pin with Location Label
+// Google Maps & Tactical Tile Layer Presets
+const TILE_LAYERS = {
+  google_road: {
+    name: "Google Streets",
+    url: "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+    attribution: '&copy; Google Maps'
+  },
+  google_sat: {
+    name: "Google Hybrid",
+    url: "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+    attribution: '&copy; Google Maps'
+  },
+  google_terrain: {
+    name: "Google Terrain",
+    url: "https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}",
+    attribution: '&copy; Google Maps'
+  },
+  dark: {
+    name: "Dark Tactical",
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; CARTO &bull; OpenStreetMap'
+  }
+};
+
+// High-Risk Flood Inundation Zones (Mithi River & Coastal Buffer Polygons)
+const FLOOD_INUNDATION_ZONES = [
+  {
+    id: "mithi-basin-zone",
+    name: "Mithi River Lowland Basin (5ft+ Inundation Risk)",
+    color: "#0284c7",
+    fillColor: "#0284c7",
+    fillOpacity: 0.25,
+    coordinates: [
+      [19.0620, 72.8650],
+      [19.0750, 72.8750],
+      [19.0880, 72.8900],
+      [19.0950, 72.8800],
+      [19.0780, 72.8600],
+      [19.0650, 72.8550]
+    ]
+  },
+  {
+    id: "coastal-surge-zone",
+    name: "Bandra-Mahim Tidal Surge Zone",
+    color: "#2563eb",
+    fillColor: "#2563eb",
+    fillOpacity: 0.20,
+    coordinates: [
+      [19.0350, 72.8300],
+      [19.0550, 72.8250],
+      [19.0650, 72.8400],
+      [19.0450, 72.8500]
+    ]
+  }
+];
+
+// Highly Legible Incident Pin with Location Label
 function createReportIcon(report) {
   const severityConfig = {
-    critical: { bg: "#ef4444", border: "#b91c1c", badgeBg: "#7f1d1d", text: "#fee2e2", label: "CRITICAL" },
-    high: { bg: "#f97316", border: "#c2410c", badgeBg: "#7c2d12", text: "#ffedd5", label: "HIGH" },
-    medium: { bg: "#eab308", border: "#a16207", badgeBg: "#713f12", text: "#fef9c3", label: "MEDIUM" },
-    low: { bg: "#06b6d4", border: "#0e7490", badgeBg: "#164e63", text: "#cffafe", label: "LOW" }
+    critical: { bg: "#dc2626", text: "#ffffff", label: "CRITICAL" },
+    high: { bg: "#ea580c", text: "#ffffff", label: "HIGH" },
+    medium: { bg: "#ca8a04", text: "#ffffff", label: "MEDIUM" },
+    low: { bg: "#0284c7", text: "#ffffff", label: "LOW" }
   };
 
   const cfg = severityConfig[report.severity] || severityConfig.medium;
@@ -65,40 +116,40 @@ function createReportIcon(report) {
 
   const html = `
     <div class="relative flex flex-col items-center group cursor-pointer" style="transform: translate(-50%, -100%);">
-      <!-- Permanent Floating Label -->
+      <!-- Permanent Floating Label with high contrast -->
       <div style="
-        background: rgba(3, 7, 18, 0.92);
-        color: ${isResolved ? '#94a3b8' : cfg.text};
-        border: 1px solid ${isResolved ? '#334155' : cfg.bg};
-        box-shadow: 0 4px 12px rgba(0,0,0,0.8);
-        padding: 2px 6px;
-        border-radius: 6px;
-        font-size: 10px;
+        background: #0f172a;
+        color: #ffffff;
+        border: 1.5px solid ${isResolved ? '#475569' : cfg.bg};
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        padding: 3px 8px;
+        border-radius: 8px;
+        font-size: 11px;
         font-weight: 700;
         white-space: nowrap;
-        margin-bottom: 3px;
+        margin-bottom: 2px;
         display: flex;
         align-items: center;
-        gap: 4px;
-        font-family: system-ui, sans-serif;
+        gap: 5px;
+        font-family: Inter, system-ui, sans-serif;
       ">
-        <span style="color: ${cfg.bg}; font-size: 8px;">●</span>
+        <span style="color: ${cfg.bg}; font-size: 9px;">●</span>
         <span>${shortName}</span>
-        ${isAssigned ? '<span style="color: #06b6d4; font-size: 9px;">⚡</span>' : ''}
+        ${isAssigned ? '<span style="color: #38bdf8; font-size: 10px;">⚡</span>' : ''}
       </div>
 
-      <!-- Icon Pin Body -->
+      <!-- Icon Body -->
       <div class="${isResolved ? '' : report.severity === 'critical' ? 'pulse-pin-critical' : ''}" style="
-        background: ${isResolved ? '#334155' : cfg.bg};
+        background: ${isResolved ? '#475569' : cfg.bg};
         border: 2px solid #ffffff;
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 14px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.9), 0 0 10px ${isResolved ? 'transparent' : cfg.bg + '80'};
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       ">
         ${isResolved ? '✓' : categoryEmoji}
       </div>
@@ -109,7 +160,7 @@ function createReportIcon(report) {
         height: 0;
         border-left: 5px solid transparent;
         border-right: 5px solid transparent;
-        border-top: 5px solid ${isResolved ? '#334155' : cfg.bg};
+        border-top: 6px solid ${isResolved ? '#475569' : cfg.bg};
         margin-top: -1px;
       "></div>
     </div>
@@ -120,79 +171,79 @@ function createReportIcon(report) {
     html,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
-    popupAnchor: [0, -45]
+    popupAnchor: [0, -44]
   });
 }
 
-// Highly Legible Resource Marker with Unit Name & Capacity Gauge
+// Highly Legible Resource Marker with Unit Name & Capacity
 function createResourceIcon(resource) {
   const typeIcons = {
-    rescue_team: { icon: "🚤", label: "Rescue Boat", color: "#06b6d4" },
-    shelter: { icon: "🏛️", label: "Shelter", color: "#10b981" },
-    supply_stock: { icon: "📦", label: "Supply Depot", color: "#f59e0b" }
+    rescue_team: { icon: "🚤", color: "#0284c7" },
+    shelter: { icon: "🏛️", color: "#16a34a" },
+    supply_stock: { icon: "📦", color: "#d97706" }
   };
 
-  const info = typeIcons[resource.type] || { icon: "📍", label: "Unit", color: "#06b6d4" };
+  const info = typeIcons[resource.type] || { icon: "📍", color: "#0284c7" };
   const isFull = resource.current_load >= resource.capacity;
-  const statusColor = isFull ? "#ef4444" : resource.current_load / resource.capacity > 0.75 ? "#f59e0b" : info.color;
+  const statusColor = isFull ? "#dc2626" : resource.current_load / resource.capacity > 0.75 ? "#d97706" : info.color;
   const shortName = resource.name.split("-")[0].replace("Battalion", "Bn").substring(0, 16);
 
   const html = `
     <div class="relative flex flex-col items-center group cursor-pointer" style="transform: translate(-50%, -100%);">
       <!-- Permanent Label with Capacity -->
       <div style="
-        background: rgba(8, 14, 26, 0.94);
-        color: #f1f5f9;
-        border: 1px solid ${statusColor};
-        box-shadow: 0 4px 12px rgba(0,0,0,0.8);
-        padding: 2px 6px;
-        border-radius: 6px;
-        font-size: 10px;
+        background: #0f172a;
+        color: #ffffff;
+        border: 1.5px solid ${statusColor};
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        padding: 3px 8px;
+        border-radius: 8px;
+        font-size: 11px;
         font-weight: 700;
         white-space: nowrap;
-        margin-bottom: 3px;
+        margin-bottom: 2px;
         display: flex;
         align-items: center;
-        gap: 4px;
-        font-family: system-ui, sans-serif;
+        gap: 5px;
+        font-family: Inter, system-ui, sans-serif;
       ">
-        <span style="color: ${statusColor};">${info.icon}</span>
+        <span>${info.icon}</span>
         <span>${shortName}</span>
         <span style="
-          background: ${statusColor}25;
-          color: ${statusColor};
-          padding: 1px 4px;
+          background: rgba(255,255,255,0.15);
+          color: #ffffff;
+          padding: 1px 5px;
           border-radius: 4px;
           font-family: monospace;
-          font-size: 9px;
+          font-size: 10px;
+          font-weight: 800;
         ">${resource.current_load}/${resource.capacity}</span>
       </div>
 
-      <!-- Tactical Square Pin -->
+      <!-- Tactical Diamond -->
       <div style="
-        background: #090e17;
+        background: #0f172a;
         border: 2px solid ${statusColor};
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 14px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.9), 0 0 10px ${statusColor}60;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         transform: rotate(45deg);
       ">
         <span style="transform: rotate(-45deg); display: block;">${info.icon}</span>
       </div>
 
-      <!-- Pointer -->
       <div style="
         width: 0;
         height: 0;
         border-left: 5px solid transparent;
         border-right: 5px solid transparent;
-        border-top: 5px solid ${statusColor};
-        margin-top: 2px;
+        border-top: 6px solid ${statusColor};
+        margin-top: 1px;
       "></div>
     </div>
   `;
@@ -202,7 +253,7 @@ function createResourceIcon(resource) {
     html,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
-    popupAnchor: [0, -45]
+    popupAnchor: [0, -44]
   });
 }
 
@@ -259,8 +310,14 @@ function MapViewController({ center, zoom, selectedReport }) {
   const map = useMap();
 
   useEffect(() => {
-    if (selectedReport) {
-      map.flyTo([selectedReport.lat, selectedReport.lng], 14, { duration: 1.2 });
+    if (map) {
+      setTimeout(() => map.invalidateSize(), 200);
+    }
+  }, [map]);
+
+  useEffect(() => {
+    if (selectedReport && map) {
+      map.flyTo([selectedReport.lat, selectedReport.lng], 14, { duration: 1.0 });
     }
   }, [selectedReport, map]);
 
@@ -280,14 +337,27 @@ export default function DisasterMap({
   onSelectReport,
   onMapClick,
   onResolveReport,
-  onOpenOverrideModal
+  onOpenOverrideModal,
+  onOpenAiCopilot,
+  theme = "dark",
+  lang = "en",
+  translations
 }) {
   const defaultCenter = region?.center || [19.0760, 72.8777];
   const defaultZoom = region?.zoom || 12;
   const mapRef = useRef(null);
 
-  // Quick Layer Filter State
-  const [filterMode, setFilterMode] = useState("all"); // "all" | "incidents" | "rescue" | "shelters"
+  const t = translations ? (translations[lang] || translations.en) : {};
+
+  const [filterMode, setFilterMode] = useState("all");
+  const [tileLayerKey, setTileLayerKey] = useState(theme === "light" ? "google_road" : "dark");
+  const [showRadiusCircles, setShowRadiusCircles] = useState(true);
+  const [showInundationZones, setShowInundationZones] = useState(true);
+
+  // Sync default tile layer when theme changes
+  useEffect(() => {
+    setTileLayerKey(theme === "light" ? "google_road" : "dark");
+  }, [theme]);
 
   const displayedReports = reports.filter(r => {
     if (filterMode === "shelters" || filterMode === "rescue") return false;
@@ -322,32 +392,38 @@ export default function DisasterMap({
     .filter(Boolean);
 
   const handleRecenter = () => {
+    soundEngine.playUiClick();
     if (mapRef.current) {
-      mapRef.current.flyTo(defaultCenter, defaultZoom, { duration: 1.0 });
+      mapRef.current.flyTo(defaultCenter, defaultZoom, { duration: 0.8 });
     }
   };
 
+  const activeTileConfig = TILE_LAYERS[tileLayerKey] || TILE_LAYERS.google_road;
+
   return (
-    <div className="relative isolate z-0 w-full h-full min-h-[420px] rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-[#020617] flex flex-col">
+    <div className="relative isolate z-0 w-full h-[360px] sm:h-[420px] lg:h-[480px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm bg-slate-100 dark:bg-slate-950 flex flex-col shrink-0 font-sans">
       
-      {/* Top Floating Telemetry & Quick Filter HUD */}
-      <div className="absolute top-2.5 left-2.5 right-2.5 z-[400] flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+      {/* Top Floating Controls Bar */}
+      <div className="absolute top-3 left-3 right-3 z-[400] flex flex-wrap items-center justify-between gap-2 pointer-events-none">
         
         {/* Left: Quick View Filter Chips */}
-        <div className="pointer-events-auto flex items-center space-x-1 p-1 rounded-xl bg-slate-950/90 backdrop-blur-md border border-slate-800 text-[11px] shadow-xl">
+        <div className="pointer-events-auto flex items-center space-x-1 p-1 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 text-xs shadow-md max-w-full overflow-x-auto">
           {[
-            { id: "all", label: "Show All" },
-            { id: "incidents", label: "🚨 Incidents Only" },
-            { id: "rescue", label: "🚤 Rescue Teams" },
+            { id: "all", label: "All Grid" },
+            { id: "incidents", label: "🚨 Incidents" },
+            { id: "rescue", label: "🚤 Boats" },
             { id: "shelters", label: "🏛️ Shelters" }
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setFilterMode(tab.id)}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition-all whitespace-nowrap ${
+              onClick={() => {
+                soundEngine.playUiClick();
+                setFilterMode(tab.id);
+              }}
+              className={`px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap ${
                 filterMode === tab.id
-                  ? "bg-slate-800 text-cyan-300 border border-cyan-500/40 shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-red-600 text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               {tab.label}
@@ -355,21 +431,47 @@ export default function DisasterMap({
           ))}
         </div>
 
-        {/* Right: Map Grid Controls */}
-        <div className="pointer-events-auto flex items-center space-x-1.5 p-1 rounded-xl bg-slate-950/90 backdrop-blur-md border border-slate-800 shadow-xl">
+        {/* Right: Google Maps Base Switcher & Recenter Controls */}
+        <div className="pointer-events-auto flex items-center space-x-1.5 p-1 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-md text-xs">
+          
+          {/* Tile Layer Selector */}
+          <div className="flex items-center space-x-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+            {[
+              { key: "google_road", label: "Street" },
+              { key: "google_sat", label: "Satellite" },
+              { key: "dark", label: "Dark" }
+            ].map(l => (
+              <button
+                key={l.key}
+                onClick={() => {
+                  soundEngine.playUiClick();
+                  setTileLayerKey(l.key);
+                }}
+                className={`px-2.5 py-1 rounded transition-all whitespace-nowrap ${
+                  tileLayerKey === l.key
+                    ? "bg-cyan-600 text-white font-bold shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Recenter Button */}
           <button
             onClick={handleRecenter}
-            className="px-2.5 py-1 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-slate-800/80 transition-all text-xs flex items-center gap-1.5 font-mono font-semibold"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all text-xs flex items-center gap-1.5 font-semibold border border-slate-200 dark:border-slate-700"
             title="Recenter Grid Coordinates"
           >
-            <Crosshair className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Recenter</span>
+            <Crosshair className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+            <span className="hidden sm:inline">Recenter</span>
           </button>
         </div>
       </div>
 
-      {/* Interactive Leaflet Map */}
-      <div className="flex-1 w-full h-full min-h-[350px]">
+      {/* Leaflet Map with touch mobile friendliness */}
+      <div className="flex-1 w-full h-full touch-pan-x touch-pan-y">
         <MapContainer
           ref={mapRef}
           center={defaultCenter}
@@ -377,18 +479,44 @@ export default function DisasterMap({
           scrollWheelZoom={true}
           className="w-full h-full"
         >
-          {/* Crisp Noire Dark Basemap */}
           <TileLayer
-            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
-            maxZoom={19}
+            key={tileLayerKey}
+            attribution={activeTileConfig.attribution}
+            url={activeTileConfig.url}
+            maxZoom={20}
           />
 
           <MapClickHandler onMapClick={onMapClick} />
           <MapViewController center={defaultCenter} zoom={defaultZoom} selectedReport={selectedReport} />
           <HeatmapLayer reports={reports} enabled={heatmapEnabled} />
 
-          {/* 1. IMD Hazard Risk Zones */}
+          {/* 1. Mithi River & Coastal High-Risk Inundation Zones */}
+          {showInundationZones && FLOOD_INUNDATION_ZONES.map(zone => (
+            <Polygon
+              key={zone.id}
+              positions={zone.coordinates}
+              pathOptions={{
+                color: zone.color,
+                fillColor: zone.fillColor,
+                fillOpacity: zone.fillOpacity,
+                weight: 2,
+                dashArray: "4, 4"
+              }}
+            >
+              <Tooltip sticky>
+                <div className="p-1 font-sans text-xs">
+                  <div className="font-bold flex items-center gap-1 text-cyan-800 dark:text-cyan-200">
+                    <span>🌊 {zone.name}</span>
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-300">
+                    High water level ingress risk • Priority rescue sector
+                  </div>
+                </div>
+              </Tooltip>
+            </Polygon>
+          ))}
+
+          {/* 2. IMD Hazard Polygons */}
           {alertsEnabled && imdAlerts.map(alert => (
             <Polygon
               key={alert.id}
@@ -396,58 +524,68 @@ export default function DisasterMap({
               pathOptions={{
                 color: alert.color,
                 fillColor: alert.fillColor,
-                fillOpacity: 0.2,
+                fillOpacity: alert.fillOpacity || 0.20,
                 weight: 2,
-                dashArray: "6, 6"
+                dashArray: "5, 5"
               }}
             >
               <Tooltip sticky>
                 <div className="p-1 font-sans text-xs">
-                  <div className="flex items-center space-x-1 font-bold text-red-400">
-                    <AlertTriangle className="w-3.5 h-3.5 mr-1 text-red-400" />
+                  <div className="flex items-center space-x-1 font-bold text-red-600 dark:text-red-400">
+                    <AlertTriangle className="w-4 h-4 mr-1 text-red-600" />
                     <span>{alert.title}</span>
                   </div>
-                  <div className="text-[10px] text-slate-300 mt-1 max-w-[220px]">
+                  <div className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 max-w-[220px]">
                     {alert.description}
-                  </div>
-                  <div className="text-[9px] text-slate-400 font-mono mt-1">
-                    Source: {alert.issuedBy}
                   </div>
                 </div>
               </Tooltip>
             </Polygon>
           ))}
 
-          {/* 2. Dispatch Vector Lines */}
+          {/* 3. Unit 4km Operational Radius Circles */}
+          {showRadiusCircles && displayedResources.map(res => (
+            <Circle
+              key={`radius-${res.id}`}
+              center={[res.lat, res.lng]}
+              radius={4000}
+              pathOptions={{
+                color: res.type === "rescue_team" ? "#0284c7" : "#16a34a",
+                fillColor: res.type === "rescue_team" ? "#0284c7" : "#16a34a",
+                fillOpacity: 0.05,
+                weight: 1.5,
+                dashArray: "3, 6"
+              }}
+            />
+          ))}
+
+          {/* 4. Dispatch Vector Lines */}
           {allocLinesEnabled && activeAllocationLines.map(({ allocation, report, resource, positions }) => (
             <Polyline
               key={allocation.id}
               positions={positions}
               pathOptions={{
-                color: "#06b6d4",
+                color: "#0284c7",
                 weight: 3,
                 opacity: 0.95,
                 className: "allocation-dash-line"
               }}
             >
               <Tooltip sticky>
-                <div className="text-xs p-1 font-mono text-cyan-200">
-                  <div className="text-cyan-400 font-bold flex items-center gap-1">
+                <div className="text-xs p-1">
+                  <div className="text-cyan-700 dark:text-cyan-400 font-bold flex items-center gap-1">
                     <Zap className="w-3.5 h-3.5" />
-                    <span>DISPATCH VECTOR: {allocation.distance_km} KM</span>
+                    <span>DISPATCH: {allocation.distance_km} KM (~{allocation.eta_minutes}m)</span>
                   </div>
-                  <div className="text-white mt-0.5 font-semibold">
-                    {resource.name} → {report.location_name || 'Incident'}
-                  </div>
-                  <div className="text-[11px] text-slate-300 mt-0.5">
-                    Est. Transit Time: <strong className="text-amber-300">~{allocation.eta_minutes} mins</strong>
+                  <div className="text-slate-900 dark:text-white mt-0.5 font-semibold text-xs">
+                    {resource.name} → {report.location_name || 'Site'}
                   </div>
                 </div>
               </Tooltip>
             </Polyline>
           ))}
 
-          {/* 3. Clearly Labeled Resource Markers */}
+          {/* 5. Resource Markers */}
           {displayedResources.map(resource => (
             <Marker
               key={resource.id}
@@ -455,122 +593,134 @@ export default function DisasterMap({
               icon={createResourceIcon(resource)}
             >
               <Popup>
-                <div className="p-3 min-w-[250px] font-sans text-slate-100 bg-slate-950/95 rounded-xl border border-slate-800">
-                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400">
+                <div className="p-3.5 min-w-[240px] font-sans text-slate-900 dark:text-slate-100">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700">
+                    <span className="text-xs font-bold uppercase text-cyan-600 dark:text-cyan-400">
                       {resource.type.replace("_", " ")}
                     </span>
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                       resource.current_load >= resource.capacity
-                        ? "bg-red-950 text-red-400 border border-red-800"
-                        : "bg-emerald-950 text-emerald-400 border border-emerald-800"
+                        ? "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400"
+                        : "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400"
                     }`}>
                       {resource.status.toUpperCase()}
                     </span>
                   </div>
 
-                  <h3 className="text-xs font-bold text-white mt-2 leading-snug">
+                  <h3 className="text-sm font-bold mt-2">
                     {resource.name}
                   </h3>
 
-                  <div className="mt-2 space-y-1.5 text-xs">
-                    <div className="flex justify-between items-center bg-slate-900/80 p-2 rounded-lg border border-slate-800 text-[11px]">
-                      <span className="text-slate-400">Current Load:</span>
-                      <span className="font-mono font-bold text-white">
+                  <div className="mt-2 space-y-2 text-xs">
+                    <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-xs">
+                      <span className="text-slate-500 dark:text-slate-400">Current Occupancy:</span>
+                      <span className="font-bold">
                         {resource.current_load} / {resource.capacity} units
                       </span>
                     </div>
 
-                    {resource.equipment && (
-                      <div className="text-[10px] text-slate-400 bg-slate-900/40 p-1.5 rounded">
-                        🧰 {resource.equipment}
-                      </div>
-                    )}
-
                     {resource.contact_info && (
-                      <div className="flex items-center text-[10px] text-slate-300 font-mono pt-1">
-                        <Phone className="w-3 h-3 mr-1 text-slate-500" />
+                      <div className="flex items-center text-xs text-slate-600 dark:text-slate-300 pt-0.5">
+                        <Phone className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
                         <span>{resource.contact_info}</span>
                       </div>
                     )}
+
+                    {/* Google Maps Directions Action */}
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${resource.lat},${resource.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full mt-1.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                    >
+                      <Navigation className="w-3.5 h-3.5" />
+                      <span>Directions in Google Maps</span>
+                    </a>
                   </div>
                 </div>
               </Popup>
             </Marker>
           ))}
 
-          {/* 4. Clearly Labeled Incident Markers */}
+          {/* 6. Incident Markers */}
           {displayedReports.map(report => (
             <Marker
               key={report.id}
               position={[report.lat, report.lng]}
               icon={createReportIcon(report)}
               eventHandlers={{
-                click: () => onSelectReport && onSelectReport(report)
+                click: () => {
+                  soundEngine.playRadarPing();
+                  if (onSelectReport) onSelectReport(report);
+                }
               }}
             >
               <Popup>
-                <div className="p-3 min-w-[260px] font-sans text-slate-100 bg-slate-950/95 rounded-xl border border-slate-800">
-                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
+                <div className="p-3.5 min-w-[260px] font-sans text-slate-900 dark:text-slate-100">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700">
                     <div className="flex items-center space-x-1.5">
-                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded font-mono uppercase ${
-                        report.severity === "critical" ? "bg-red-950 text-red-400 border border-red-800" :
-                        report.severity === "high" ? "bg-orange-950 text-orange-400 border border-orange-800" :
-                        report.severity === "medium" ? "bg-yellow-950 text-yellow-400 border border-yellow-800" :
-                        "bg-cyan-950 text-cyan-400 border border-cyan-800"
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${
+                        report.severity === "critical" ? "bg-red-600 text-white" :
+                        report.severity === "high" ? "bg-orange-600 text-white" :
+                        report.severity === "medium" ? "bg-yellow-600 text-white" :
+                        "bg-cyan-600 text-white"
                       }`}>
                         {report.severity}
                       </span>
-                      <span className="text-[10px] text-slate-500 font-mono">
+                      <span className="text-xs text-slate-500 font-mono">
                         #{report.id.slice(-6)}
                       </span>
                     </div>
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      {report.source === "sms" ? "📱 GSM SMS" : "🌐 Web SOS"}
+                    <span className="text-xs text-slate-500">
+                      {report.source === "sms" ? "📱 SMS" : "🌐 Web SOS"}
                     </span>
                   </div>
 
-                  <div className="mt-2 text-xs font-semibold text-white">
-                    {report.location_name || "Incident Site"}
+                  <div className="mt-2 text-sm font-bold">
+                    {report.location_name || "Incident Location"}
                   </div>
 
-                  <p className="mt-1 text-xs text-slate-300 leading-relaxed bg-slate-900/60 p-2 rounded-lg border border-slate-800/80">
+                  <p className="mt-1 text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-100 dark:bg-slate-800/70 p-2 rounded-lg">
                     {report.description}
                   </p>
 
-                  <div className="mt-2 pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-                    <div className="flex items-center text-slate-300">
-                      <Phone className="w-3 h-3 mr-1 text-slate-500" />
-                      <span>{report.phone}</span>
-                    </div>
-                    <span>{new Date(report.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-
-                  {/* Quick Dispatch & Resolve Actions */}
-                  <div className="mt-3 flex items-center gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOpenOverrideModal(report);
-                      }}
-                      className="flex-1 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/30"
-                    >
-                      Re-Route Unit
-                    </button>
-
-                    {report.status !== "resolved" && (
+                  <div className="mt-3 flex flex-col space-y-2">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          onResolveReport(report.id);
+                          if (onOpenOverrideModal) onOpenOverrideModal(report);
                         }}
-                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/30 flex items-center gap-1"
-                        title="Mark Mission Resolved"
+                        className="flex-1 px-3 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm"
                       >
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        <span>Resolve</span>
+                        <Zap className="w-3.5 h-3.5" />
+                        <span>Dispatch Unit</span>
                       </button>
-                    )}
+
+                      {report.status !== "resolved" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onResolveReport(report.id);
+                          }}
+                          className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-1"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          <span>Resolve</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Google Maps Route Link */}
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${report.lat},${report.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-1 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 text-xs flex items-center justify-center gap-1 transition-all"
+                    >
+                      <Navigation className="w-3.5 h-3.5" />
+                      <span>View Route on Google Maps &rarr;</span>
+                    </a>
                   </div>
                 </div>
               </Popup>
@@ -579,31 +729,15 @@ export default function DisasterMap({
         </MapContainer>
       </div>
 
-      {/* Floating Bottom Help & Legend Bar */}
-      <div className="p-2 bg-slate-950/95 border-t border-slate-800 flex flex-wrap items-center justify-between text-[11px] text-slate-400 gap-2 font-mono">
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-            <span className="text-slate-300">Critical (P1)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-            <span className="text-slate-300">High (P2)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-sm bg-slate-900 border border-cyan-400"></span>
-            <span className="text-slate-300">Rescue Units</span>
-          </div>
-          <div className="hidden sm:flex items-center gap-1.5">
-            <span className="w-3 h-0.5 bg-cyan-400"></span>
-            <span className="text-slate-300">Dispatch Lines</span>
-          </div>
+      {/* Floating Bottom Legend */}
+      <div className="px-3 py-2 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
+        <div className="flex items-center space-x-3 overflow-x-auto">
+          <span className="flex items-center gap-1.5 whitespace-nowrap"><span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span> Critical</span>
+          <span className="flex items-center gap-1.5 whitespace-nowrap"><span className="w-2 h-2 rounded-full bg-orange-600"></span> High</span>
+          <span className="flex items-center gap-1.5 whitespace-nowrap"><span className="w-2 h-2 rounded-sm bg-cyan-600"></span> Unit</span>
+          <span className="hidden sm:flex items-center gap-1.5 whitespace-nowrap"><span className="w-3 h-1 border-b-2 border-cyan-600"></span> Inundation Zone</span>
         </div>
-
-        <div className="flex items-center text-[10px] text-cyan-400/90 font-sans">
-          <Info className="w-3 h-3 mr-1" />
-          <span>Click anywhere on map to report incident or drop relief unit</span>
-        </div>
+        <span className="text-cyan-700 dark:text-cyan-400 font-medium hidden md:inline">Tap any marker to view details & dispatch</span>
       </div>
     </div>
   );
