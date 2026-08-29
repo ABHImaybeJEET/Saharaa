@@ -11,13 +11,18 @@ import {
   ShieldCheck 
 } from "lucide-react";
 import { deployNewResource } from "../utils/api";
+import { soundEngine } from "../utils/soundEffects";
 
 export default function DeployResourceModal({
   isOpen,
   onClose,
   initialCoords = null,
-  onSuccess
+  onSuccess,
+  lang = "en",
+  translations
 }) {
+  const t = translations ? (translations[lang] || translations.en) : {};
+
   const [name, setName] = useState("");
   const [type, setType] = useState("rescue_team");
   const [capacity, setCapacity] = useState("50");
@@ -39,6 +44,7 @@ export default function DeployResourceModal({
 
     setError(null);
     setSubmitting(true);
+    soundEngine.playRadarPing();
 
     try {
       const response = await deployNewResource({
@@ -50,6 +56,7 @@ export default function DeployResourceModal({
         contact_info: contactInfo.trim(),
         equipment: equipment.trim()
       });
+      soundEngine.playDispatchTone();
       if (onSuccess) onSuccess(response);
       onClose();
     } catch (err) {
@@ -60,28 +67,31 @@ export default function DeployResourceModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto font-sans">
-      <div className="bg-tactical-900 border border-tactical-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto font-sans">
+      <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="p-4 border-b border-tactical-800 bg-tactical-950/80 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold shadow-md shadow-emerald-600/30">
               <Plus className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-                Deploy Emergency Resource
+              <h2 className="text-sm font-bold uppercase tracking-wider font-mono">
+                {t.deploy_modal_title || "Deploy Emergency Resource"}
               </h2>
-              <p className="text-[11px] text-slate-400">
-                Register a new relief shelter, rescue crew, or supply depot
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {t.deploy_modal_sub || "Register a new relief shelter, rescue crew, or supply depot"}
               </p>
             </div>
           </div>
 
           <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-tactical-800 transition-all"
+            onClick={() => {
+              soundEngine.playUiClick();
+              onClose();
+            }}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
           >
             <X className="w-4 h-4" />
           </button>
@@ -89,34 +99,34 @@ export default function DeployResourceModal({
 
         <form onSubmit={handleSubmit} className="p-4 space-y-3.5 max-h-[80vh] overflow-y-auto">
           {error && (
-            <div className="p-3 rounded-xl bg-red-950/40 border border-red-800 text-xs text-red-300">
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 uppercase font-mono mb-1">
-              Unit / Camp Name:
+            <label className="block text-xs font-bold uppercase font-mono mb-1 text-slate-700 dark:text-slate-300">
+              {t.deploy_name_label || "Unit / Camp Name:"}
             </label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. SDRF Tactical Rescue Unit 08"
-              className="w-full px-3 py-2 bg-tactical-950 border border-tactical-700 rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
+              placeholder={t.deploy_name_ph || "e.g. SDRF Tactical Rescue Unit 08"}
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase font-mono mb-1">
-                Resource Type:
+              <label className="block text-xs font-bold uppercase font-mono mb-1 text-slate-700 dark:text-slate-300">
+                {t.deploy_type_label || "Resource Type:"}
               </label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full px-2.5 py-2 bg-tactical-950 border border-tactical-700 rounded-xl text-xs text-slate-100"
+                className="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-slate-100"
               >
                 <option value="rescue_team">🚤 Rescue Boat / Team</option>
                 <option value="shelter">🏛️ Relief Shelter</option>
@@ -125,8 +135,8 @@ export default function DeployResourceModal({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase font-mono mb-1">
-                Total Capacity:
+              <label className="block text-xs font-bold uppercase font-mono mb-1 text-slate-700 dark:text-slate-300">
+                {t.deploy_cap_label || "Total Capacity:"}
               </label>
               <input
                 type="number"
@@ -134,55 +144,55 @@ export default function DeployResourceModal({
                 min="1"
                 value={capacity}
                 onChange={(e) => setCapacity(e.target.value)}
-                className="w-full px-3 py-2 bg-tactical-950 border border-tactical-700 rounded-xl text-xs text-slate-100 font-mono"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-slate-100 font-mono"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs font-mono">
             <div>
-              <span className="text-[10px] text-slate-400">Deploy Lat:</span>
+              <span className="text-xs text-slate-500">{t.deploy_lat_label || "Deploy Lat:"}</span>
               <input
                 type="number"
                 step="0.0001"
                 value={lat}
                 onChange={(e) => setLat(e.target.value)}
-                className="w-full px-2.5 py-1.5 bg-tactical-950 border border-tactical-700 rounded-lg text-slate-200"
+                className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-200"
               />
             </div>
             <div>
-              <span className="text-[10px] text-slate-400">Deploy Lng:</span>
+              <span className="text-xs text-slate-500">{t.deploy_lng_label || "Deploy Lng:"}</span>
               <input
                 type="number"
                 step="0.0001"
                 value={lng}
                 onChange={(e) => setLng(e.target.value)}
-                className="w-full px-2.5 py-1.5 bg-tactical-950 border border-tactical-700 rounded-lg text-slate-200"
+                className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-200"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 uppercase font-mono mb-1">
-              Contact / Officer In Charge:
+            <label className="block text-xs font-bold uppercase font-mono mb-1 text-slate-700 dark:text-slate-300">
+              {t.deploy_contact_label || "Contact / Officer In Charge:"}
             </label>
             <input
               type="text"
               value={contactInfo}
               onChange={(e) => setContactInfo(e.target.value)}
-              className="w-full px-3 py-2 bg-tactical-950 border border-tactical-700 rounded-xl text-xs text-slate-100"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-slate-100"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-300 uppercase font-mono mb-1">
-              Equipment / Stock Description:
+            <label className="block text-xs font-bold uppercase font-mono mb-1 text-slate-700 dark:text-slate-300">
+              {t.deploy_equipment_label || "Equipment / Stock Description:"}
             </label>
             <input
               type="text"
               value={equipment}
               onChange={(e) => setEquipment(e.target.value)}
-              className="w-full px-3 py-2 bg-tactical-950 border border-tactical-700 rounded-xl text-xs text-slate-100"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-slate-100"
             />
           </div>
 
@@ -190,14 +200,14 @@ export default function DeployResourceModal({
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-xl text-xs tracking-wider uppercase transition-all shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2"
+              className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-xl text-xs tracking-wider uppercase transition-all shadow-md shadow-emerald-600/30 flex items-center justify-center space-x-2"
             >
               {submitting ? (
-                <span>REGISTERING DEPLOYMENT...</span>
+                <span>{t.deploy_submitting || "REGISTERING DEPLOYMENT..."}</span>
               ) : (
                 <>
                   <ShieldCheck className="w-4 h-4" />
-                  <span>DEPLOY UNIT TO ACTIVE GRID</span>
+                  <span>{t.deploy_submit_btn || "DEPLOY UNIT TO ACTIVE GRID"}</span>
                 </>
               )}
             </button>
