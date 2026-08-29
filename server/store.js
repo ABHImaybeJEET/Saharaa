@@ -152,6 +152,27 @@ export const SEED_ALLOCATIONS = [
   }
 ];
 
+export const SEED_BROADCAST_ALERTS = [
+  {
+    id: "alert-01",
+    level: "red",
+    title: "IMD RED ALERT: Flash Flood & Coastal Surge Warning",
+    message: "Extremely heavy rainfall (>200mm) combined with 4.8m high tide expected between 04:00 - 08:00 hrs. Low-lying zones along Mithi river basin must evacuate to nearest designated shelters immediately.",
+    area: "Mumbai Suburban & Coastal Belt",
+    timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+    issued_by: "District Disaster Management Authority (DDMA)"
+  },
+  {
+    id: "alert-02",
+    level: "orange",
+    title: "Shelter Availability & Relief Camp Directive",
+    message: "St. Jude Central Relief Shelter (Kalina) and North High Ground Stadium (Andheri) are fully operational with dry food, medical aid, and power backups.",
+    area: "Western Suburbs Zone 3 & 4",
+    timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+    issued_by: "Relief & Rehabilitation Commissioner"
+  }
+];
+
 class Store {
   constructor() {
     this.reset();
@@ -161,6 +182,7 @@ class Store {
     this.reports = JSON.parse(JSON.stringify(SEED_REPORTS));
     this.resources = JSON.parse(JSON.stringify(SEED_RESOURCES));
     this.allocations = JSON.parse(JSON.stringify(SEED_ALLOCATIONS));
+    this.broadcastAlerts = JSON.parse(JSON.stringify(SEED_BROADCAST_ALERTS));
     this.auditLogs = [
       {
         id: "log-1",
@@ -182,6 +204,7 @@ class Store {
       reports: this.reports,
       resources: this.resources,
       allocations: this.allocations,
+      broadcastAlerts: this.broadcastAlerts,
       auditLogs: this.auditLogs,
       metrics: this.computeMetrics()
     };
@@ -246,6 +269,11 @@ class Store {
       return this.allocations[idx];
     }
     return null;
+  }
+
+  addBroadcastAlert(alert) {
+    this.broadcastAlerts.unshift(alert);
+    return alert;
   }
 
   addAuditLog(message, type = "info") {

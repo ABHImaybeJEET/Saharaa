@@ -54,6 +54,19 @@ export async function executeManualOverride(overrideData) {
   return res.json();
 }
 
+export async function broadcastAlert(alertData) {
+  const res = await fetch(`${API_BASE}/api/alerts/broadcast`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(alertData)
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Failed to broadcast alert");
+  }
+  return res.json();
+}
+
 export async function resolveReport(reportId) {
   const res = await fetch(`${API_BASE}/api/reports/${reportId}/resolve`, {
     method: "POST",

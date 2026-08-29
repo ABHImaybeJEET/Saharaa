@@ -1,0 +1,515 @@
+// client/src/utils/translations.js
+// Exhaustive multi-language translation support for India disaster response (English, Hindi, Marathi)
+
+export const TRANSLATIONS = {
+  en: {
+    brand_title: "SAHARAA",
+    brand_sub: "Geospatial Crisis Coordination & Resource Allocation Mesh",
+    badge_active: "ACTIVE",
+    badge_offline: "OFFLINE",
+    nav_map: "Tactical Map",
+    nav_sos: "Citizen SOS",
+    nav_gsm: "GSM Ingestion",
+    nav_units: "Relief Units",
+    nav_drills: "Tactical Drills",
+    nav_reset: "Reset Grid",
+    btn_sos: "+ SOS",
+    btn_guide: "Commander Guide",
+
+    // Themes
+    theme_dark: "Dark Mode",
+    theme_light: "Light Mode",
+
+    // Metrics
+    metric_critical: "Critical Triage",
+    metric_critical_sub: "Priority 1 Dispatches",
+    metric_sorties: "Active Sorties",
+    metric_sorties_sub: "Spatial Matching OK",
+    metric_capacity: "Relief Headroom",
+    metric_capacity_sub: "Free slots",
+    metric_escalations: "Manual Escalations",
+    metric_escalations_sub: "Need review",
+    metric_units: "Deployed Units",
+    metric_units_sub: "Live Coordination Active",
+
+    // Triage Feed
+    triage_title: "Live Incident Triage",
+    triage_sub: "Auto-Sorted by Risk & Age",
+    triage_search_ph: "Search incidents by location, text, phone...",
+    tab_all: "All Feed",
+    tab_critical: "🔥 Critical",
+    tab_escalated: "⚠️ Escalated",
+    tab_assigned: "⚡ Assigned",
+    tab_resolved: "✓ Resolved",
+    btn_override: "Override",
+    btn_resolve: "Resolve",
+    status_resolved: "Mission Resolved & Closed",
+    status_escalated: "ESCALATED - Needs Dispatcher Action",
+
+    // Resource Panel
+    units_title: "Emergency Units",
+    btn_deploy: "Deploy Unit",
+    tab_all_units: "All Units",
+    tab_boats: "🚤 Rescue Boats/Teams",
+    tab_shelters: "🏛️ Shelters",
+    tab_supplies: "📦 Supplies",
+    resource_load: "Deployed Load",
+    resource_capacity_full: "CAPACITY FULL",
+    resource_gear: "Gear",
+    resource_active_sorties: "active sorties",
+
+    // Active Dispatches
+    active_dispatches_title: "Active Dispatches",
+    haversine_routed: "Haversine Routed",
+    no_dispatches: "No active dispatches currently in transit.",
+    reroute_btn: "Re-route Unit →",
+    ai_copilot_btn: "AI Copilot",
+
+    // Telemetry Banner
+    cyclone_alert: "IMD RED ALERT: Flash Flood & Coastal Surge Hazard",
+    telemetry_rainfall: "Rainfall",
+    telemetry_wind: "Wind Gusts",
+    telemetry_tide: "High Tide",
+    telemetry_flood_risk: "Flood Risk Index",
+    btn_sitrep: "Emergency SitRep",
+    btn_mesh: "LoRa Mesh Topology",
+    btn_custom_disaster: "Inject Scenario",
+    audio_on: "Audio FX: ON",
+    audio_off: "Audio FX: OFF",
+    voice_on: "Voice Alerts: ON",
+    voice_off: "Voice Alerts: OFF",
+
+    // Categories
+    cat_flood: "Flood Inundation",
+    cat_trapped: "Stranded / Trapped",
+    cat_medical: "Medical Crisis",
+    cat_shelterless: "Shelter / Roof Gone",
+    cat_food_water: "Food / RO Water",
+    cat_landslide: "Landslide Risk",
+
+    // Severities
+    sev_critical: "CRITICAL",
+    sev_high: "HIGH",
+    sev_medium: "MEDIUM",
+    sev_low: "LOW",
+
+    // Citizen SOS Modal
+    sos_title: "Citizen Emergency SOS Portal",
+    sos_subtitle: "Direct zero-login link to Emergency Dispatch Grid",
+    sos_cat_label: "1. Incident Category",
+    sos_sev_label: "2. Urgency / Severity Level",
+    sos_loc_label: "3. Incident Location",
+    sos_gps_btn: "Use Device GPS",
+    sos_desc_label: "4. Situation Description",
+    sos_desc_ph: "Describe number of people, water depth, immediate medical requirements...",
+    sos_phone_label: "Callback Phone",
+    sos_photo_label: "Sample Field Photo",
+    sos_photo_none: "No Photo",
+    sos_submit_btn: "BROADCAST EMERGENCY SOS DISPATCH",
+    sos_submitting: "TRANSMITTING SOS...",
+    sos_success_title: "Emergency Report Transmitted!",
+    sos_success_desc: "Report has been broadcasted across the authority command mesh.",
+    sos_matched_badge: "AUTOMATED DISPATCH MATCHED",
+    sos_escalated_badge: "⚠️ All direct local units currently engaged. Escalated to chief dispatcher.",
+    sos_return_btn: "Return to Command View",
+
+    // SMS Modal
+    sms_title: "Offline GSM / SMS Ingestion Gateway",
+    sms_subtitle: "Receives and geocodes SOS text messages when mobile internet is down",
+    sms_protocol_title: "Offline Telephony Protocol",
+    sms_protocol_desc: "Citizens in cyclone cutoffs send plain text SMS messages in format: FLOOD [PINCODE] [SEVERITY] [DETAILS]. Saharaa parses coordinates, extracts severity, and executes automatic spatial dispatch.",
+    sms_sample_label: "Sample Inbound Messages:",
+    sms_input_label: "Inbound SMS Text:",
+    sms_phone_label: "Sender Mobile Number:",
+    sms_send_btn: "TRANSMIT INBOUND SMS",
+    sms_sending: "INGESTING & PARSING SMS...",
+    sms_success_title: "SMS INGESTED & GEOLOCATED",
+
+    // Manual Override Modal
+    override_modal_title: "Dispatcher Manual Override",
+    override_modal_sub: "Human-in-the-loop tactical reassignment & priority routing",
+    override_select_unit: "Select Unit to Allocate / Reassign:",
+    override_reason_label: "Dispatcher Reason / Tactical Notes:",
+    override_reason_ph: "e.g. Higher ground access / amphibious boat needed",
+    override_submit_btn: "AUTHORIZE & RE-ROUTE UNIT",
+    override_submitting: "APPLYING DISPATCH OVERRIDE...",
+
+    // Deploy Resource Modal
+    deploy_modal_title: "Deploy Emergency Resource",
+    deploy_modal_sub: "Register a new relief shelter, rescue crew, or supply depot",
+    deploy_name_label: "Unit / Camp Name:",
+    deploy_name_ph: "e.g. SDRF Tactical Rescue Unit 08",
+    deploy_type_label: "Resource Type:",
+    deploy_cap_label: "Total Capacity:",
+    deploy_lat_label: "Deploy Lat:",
+    deploy_lng_label: "Deploy Lng:",
+    deploy_contact_label: "Contact / Officer In Charge:",
+    deploy_equipment_label: "Equipment / Stock Description:",
+    deploy_submit_btn: "DEPLOY UNIT TO ACTIVE GRID",
+    deploy_submitting: "REGISTERING DEPLOYMENT...",
+
+    // Quick Guided Tour
+    guide_modal_title: "Saharaa Command Grid: Quick Guide",
+    guide_modal_sub: "60-Second walkthrough for dispatchers and judges",
+    guide_step1_title: "1. Real-Time Spatial Matching",
+    guide_step1_desc: "Every incident computes straight-line Haversine distances to nearest eligible units and renders animated dispatch trajectories.",
+    guide_step2_title: "2. Offline Telephony (Zero-Internet)",
+    guide_step2_desc: "SMS Ingestion decodes plain text reports with pincodes and runs automated dispatch even with 0% cellular data availability.",
+    guide_step3_title: "3. AI Copilot & 1-Click WhatsApp Orders",
+    guide_step3_desc: "Inspect any incident to view AI risk scoring, natural-language reasoning, and pre-formatted field dispatch orders.",
+    guide_step4_title: "4. Multi-Layer Map & Inundation Zones",
+    guide_step4_desc: "Switch between Dark Tactical, Satellite Recon, and Terrain Topo base maps with live Mithi River flood polygons.",
+
+    // Audit Feed
+    audit_title: "Saharaa Autonomous Coordination Audit Stream",
+    audit_live: "LIVE LOGS",
+    audit_empty: "No system events logged yet.",
+
+    // Map labels
+    map_legend_critical: "Critical",
+    map_legend_high: "High",
+    map_legend_unit: "Unit",
+    map_legend_inundation: "Inundation Zone",
+    map_drop_help: "Tap anywhere on map to drop emergency SOS"
+  },
+  hi: {
+    brand_title: "सहारा (SAHARAA)",
+    brand_sub: "भू-स्थानिक आपदा समन्वय एवं संसाधन आवंटन प्रणाली",
+    badge_active: "सक्रिय",
+    badge_offline: "ऑफ़लाइन",
+    nav_map: "सामरिक नक्शा",
+    nav_sos: "नागरिक SOS",
+    nav_gsm: "GSM संदेश",
+    nav_units: "राहत दल",
+    nav_drills: "आपदा अभ्यास",
+    nav_reset: "रीसेट ग्रिड",
+    btn_sos: "+ आपातकाल",
+    btn_guide: "कमांड गाइड",
+
+    // Themes
+    theme_dark: "डार्क मोड",
+    theme_light: "लाइट मोड",
+
+    // Metrics
+    metric_critical: "गंभीर आपातकाल",
+    metric_critical_sub: "प्राथमिकता 1 प्रेषण",
+    metric_sorties: "सक्रिय मिशन",
+    metric_sorties_sub: "सटीक आवंटन चालू",
+    metric_capacity: "उपलब्ध क्षमता",
+    metric_capacity_sub: "खाली स्थान",
+    metric_escalations: "लंबित मामले",
+    metric_escalations_sub: "समीक्षा आवश्यक",
+    metric_units: "तैनात इकाइयां",
+    metric_units_sub: "सक्रिय समन्वय",
+
+    // Triage Feed
+    triage_title: "लाइव घटना सूची",
+    triage_sub: "जोखिम और समय के अनुसार क्रमबद्ध",
+    triage_search_ph: "स्थान, विवरण, फोन नंबर से खोजें...",
+    tab_all: "सभी घटनाएं",
+    tab_critical: "🔥 गंभीर",
+    tab_escalated: "⚠️ एस्केलेटेड",
+    tab_assigned: "⚡ आवंटित",
+    tab_resolved: "✓ हल किया गया",
+    btn_override: "पुनः आवंटित",
+    btn_resolve: "हल करें",
+    status_resolved: "मिशन पूर्ण एवं सुरक्षित",
+    status_escalated: "गंभीर - नियंत्रक कार्रवाई आवश्यक",
+
+    // Resource Panel
+    units_title: "राहत एवं बचाव दल",
+    btn_deploy: "नया दल जोड़ें",
+    tab_all_units: "सभी दल",
+    tab_boats: "🚤 बचाव नौकाएं",
+    tab_shelters: "🏛️ राहत शिविर",
+    tab_supplies: "📦 रसद भंडार",
+    resource_load: "तैनात भार",
+    resource_capacity_full: "क्षमता पूर्ण",
+    resource_gear: "उपकरण",
+    resource_active_sorties: "सक्रिय मिशन",
+
+    // Active Dispatches
+    active_dispatches_title: "सक्रिय प्रेषण",
+    haversine_routed: "हेवरसाइन मार्गदर्शित",
+    no_dispatches: "वर्तमान में कोई सक्रिय मिशन नहीं है।",
+    reroute_btn: "दल पुनः भेजें →",
+    ai_copilot_btn: "AI सहायक",
+
+    // Telemetry Banner
+    cyclone_alert: "मौसम विभाग रेड अलर्ट: भारी वर्षा एवं बाढ़ का खतरा",
+    telemetry_rainfall: "वर्षा तीव्रता",
+    telemetry_wind: "हवा की गति",
+    telemetry_tide: "उच्च ज्वार",
+    telemetry_flood_risk: "बाढ़ जोखिम सूचकांक",
+    btn_sitrep: "स्थिति रिपोर्ट (SitRep)",
+    btn_mesh: "मेश नेटवर्क दृश्य",
+    btn_custom_disaster: "घटना इंजेक्ट करें",
+    audio_on: "ध्वनि: चालू",
+    audio_off: "ध्वनि: बंद",
+    voice_on: "आवाज चेतावनी: चालू",
+    voice_off: "आवाज चेतावनी: बंद",
+
+    // Categories
+    cat_flood: "बाढ़ एवं जलभराव",
+    cat_trapped: "फंसे हुए लोग / छत पर बचाव",
+    cat_medical: "चिकित्सा आपातकाल",
+    cat_shelterless: "छतविहीन / विस्थापित परिवार",
+    cat_food_water: "राशन व स्वच्छ पेयजल",
+    cat_landslide: "भूस्खलन का खतरा",
+
+    // Severities
+    sev_critical: "अत्यंत गंभीर",
+    sev_high: "उच्च",
+    sev_medium: "मध्यम",
+    sev_low: "सामान्य",
+
+    // Citizen SOS Modal
+    sos_title: "नागरिक आपातकालीन SOS पोर्टल",
+    sos_subtitle: "आपातकालीन नियंत्रण ग्रिड से सीधा संपर्क",
+    sos_cat_label: "१. घटना श्रेणी",
+    sos_sev_label: "२. तत्कालता स्तर",
+    sos_loc_label: "३. घटना स्थल",
+    sos_gps_btn: "डिवाइस GPS का उपयोग करें",
+    sos_desc_label: "४. स्थिति का विवरण",
+    sos_desc_ph: "फंसे लोगों की संख्या, पानी का स्तर, चिकित्सीय आवश्यकता बताएं...",
+    sos_phone_label: "संपर्क फोन नंबर",
+    sos_photo_label: "घटना स्थल फोटो",
+    sos_photo_none: "कोई फोटो नहीं",
+    sos_submit_btn: "आपातकालीन SOS प्रेषित करें",
+    sos_submitting: "SOS भेजा जा रहा है...",
+    sos_success_title: "आपातकालीन रिपोर्ट सफलतापूर्वक भेजी गई!",
+    sos_success_desc: "रिपोर्ट आपातकालीन कमान ग्रिड पर प्रसारित कर दी गई है।",
+    sos_matched_badge: "स्वचालित बचाव दल आवंटित",
+    sos_escalated_badge: "⚠️ निकटतम दल व्यस्त हैं। रिपोर्ट मुख्य नियंत्रक को भेजी गई।",
+    sos_return_btn: "कमांड ग्रिड पर लौटें",
+
+    // SMS Modal
+    sms_title: "ऑफ़लाइन GSM / SMS गेटवे",
+    sms_subtitle: "इंटरनेट न होने पर SMS संदेशों का भू-स्थानिक विश्लेषण",
+    sms_protocol_title: "ऑफ़लाइन टेलीफोनी प्रोटोकॉल",
+    sms_protocol_desc: "चक्रवात में मोबाइल डेटा ठप होने पर नागरिक SMS प्रारूप भेजते हैं: FLOOD [पिनकोड] [गंभीरता] [विवरण]। सहारा निर्देशांक डिकोड कर स्वचालित प्रेषण करता है।",
+    sms_sample_label: "नमूना इनबाउंड संदेश:",
+    sms_input_label: "प्राप्त SMS टेक्स्ट:",
+    sms_phone_label: "प्रेषक का मोबाइल नंबर:",
+    sms_send_btn: "इनबाउंड SMS भेजें",
+    sms_sending: "SMS पार्स एवं डिकोड हो रहा है...",
+    sms_success_title: "SMS सफलतापूर्वक डिकोड एवं लोकेट हुआ",
+
+    // Manual Override Modal
+    override_modal_title: "नियंत्रक मैनुअल ओवरराइड",
+    override_modal_sub: "मानवीय निर्णय आधारित पुनः आवंटन एवं प्राथमिकता रूटिंग",
+    override_select_unit: "आवंटन के लिए इकाई चुनें:",
+    override_reason_label: "नियंत्रक टिप्पणी / निर्णय का कारण:",
+    override_reason_ph: "जैसे: ऊंचे स्थान से पहुंच / नाव की आवश्यकता",
+    override_submit_btn: "अधिकृत करें एवं दल पुनः भेजें",
+    override_submitting: "पुनः आवंटन लागू किया जा रहा है...",
+
+    // Deploy Resource Modal
+    deploy_modal_title: "आपातकालीन संसाधन तैनात करें",
+    deploy_modal_sub: "नया राहत शिविर, बचाव दल या रसद डिपो पंजीकृत करें",
+    deploy_name_label: "दल / शिविर का नाम:",
+    deploy_name_ph: "जैसे: SDRF बचाव दल 08",
+    deploy_type_label: "संसाधन प्रकार:",
+    deploy_cap_label: "कुल क्षमता:",
+    deploy_lat_label: "अक्षांश (Lat):",
+    deploy_lng_label: "देशांतर (Lng):",
+    deploy_contact_label: "प्रभारी अधिकारी / संपर्क:",
+    deploy_equipment_label: "उपकरण एवं सामग्री विवरण:",
+    deploy_submit_btn: "ग्रिड में इकाई तैनात करें",
+    deploy_submitting: "तैनाती दर्ज की जा रही है...",
+
+    // Quick Guided Tour
+    guide_modal_title: "सहारा कमांड ग्रिड: त्वरित मार्गदर्शिका",
+    guide_modal_sub: "नियंत्रकों और निर्णायकों के लिए 60-सेकंड टूर",
+    guide_step1_title: "१. वास्तविक समय स्थानिक मिलान",
+    guide_step1_desc: "प्रत्येक रिपोर्ट पर हेवरसाइन दूरी की गणना कर निकटतम उपलब्ध दल का स्वचालित आवंटन और विजुअल रूट खींचा जाता है।",
+    guide_step2_title: "२. ऑफ़लाइन टेलीफोनी (शून्य इंटरनेट)",
+    guide_step2_desc: "SMS गेटवे बिना इंटरनेट के पिनकोड वाले साधारण टेक्स्ट संदेशों को डिकोड कर स्वचालित मिशन शुरू करता है।",
+    guide_step3_title: "३. AI सहायक और 1-क्लिक व्हाट्सएप आदेश",
+    guide_step3_desc: "किसी भी घटना पर क्लिक कर AI जोखिम स्कोर, कारण और फील्ड कमांडरों के लिए सीधे प्रेषण आदेश देखें।",
+    guide_step4_title: "४. बहु-स्तरीय नक्शा एवं बाढ़ क्षेत्र",
+    guide_step4_desc: "डार्क, सैटेलाइट और टोपो मानचित्रों तथा मीठी नदी के बाढ़ क्षेत्रों को आसानी से टॉगल करें।",
+
+    // Audit Feed
+    audit_title: "सहारा स्वायत्त समन्वय ऑडिट स्ट्रीम",
+    audit_live: "लाइव लॉग",
+    audit_empty: "अभी तक कोई सिस्टम इवेंट दर्ज नहीं हुआ है।",
+
+    // Map labels
+    map_legend_critical: "गंभीर",
+    map_legend_high: "उच्च",
+    map_legend_unit: "इकाई",
+    map_legend_inundation: "जलभराव क्षेत्र",
+    map_drop_help: "आपातकालीन SOS पिन लगाने के लिए नक्शे पर कहीं भी टैप करें"
+  },
+  mr: {
+    brand_title: "सहारा (SAHARAA)",
+    brand_sub: "भू-स्थानिक आपत्ती समन्वय आणि संसाधन वाटप यंत्रणा",
+    badge_active: "सक्रिय",
+    badge_offline: "ऑफलाइन",
+    nav_map: "आपत्ती नकाशा",
+    nav_sos: "नागरिक SOS",
+    nav_gsm: "SMS संदेश",
+    nav_units: "मदत पथके",
+    nav_drills: "आपत्ती सराव",
+    nav_reset: "रीसेट करा",
+    btn_sos: "+ आणीबाणी",
+    btn_guide: "मार्गदर्शिका",
+
+    // Themes
+    theme_dark: "डार्क मोड",
+    theme_light: "लाइट मोड",
+
+    // Metrics
+    metric_critical: "तातडीच्या घटना",
+    metric_critical_sub: "प्राधान्य १ बचाव",
+    metric_sorties: "सक्रिय मोहिमा",
+    metric_sorties_sub: "मार्गदर्शन सक्रिय",
+    metric_capacity: "शिल्लक क्षमता",
+    metric_capacity_sub: "उपलब्ध जागा",
+    metric_escalations: "प्रलंबित प्रकरणे",
+    metric_escalations_sub: "लक्ष आवश्यक",
+    metric_units: "तैनात पथके",
+    metric_units_sub: "थेट समन्वय सुरू",
+
+    // Triage Feed
+    triage_title: "थेट आपत्ती नोंदवही",
+    triage_sub: "धोका आणि वेळेनुसार क्रमवारी",
+    triage_search_ph: "ठिकाण, माहिती, फोन नंबरने शोधा...",
+    tab_all: "सर्व घटना",
+    tab_critical: "🔥 अत्यंत गंभीर",
+    tab_escalated: "⚠️ प्रलंबित",
+    tab_assigned: "⚡ वाटप केले",
+    tab_resolved: "✓ सोडवले",
+    btn_override: "बदला",
+    btn_resolve: "पूर्ण करा",
+    status_resolved: "मोहीम यशस्वीरीत्या पूर्ण",
+    status_escalated: "धोका - अधिकाऱ्यांचा निर्णय आवश्यक",
+
+    // Resource Panel
+    units_title: "बचाव व मदत पथके",
+    btn_deploy: "नवीन पथक",
+    tab_all_units: "सर्व पथके",
+    tab_boats: "🚤 बचाव बोटी",
+    tab_shelters: "🏛️ निवारा शिबिरे",
+    tab_supplies: "📦 अन्न साठा",
+    resource_load: "वापरलेली क्षमता",
+    resource_capacity_full: "क्षमता पूर्ण",
+    resource_gear: "साहित्य",
+    resource_active_sorties: "सक्रिय मोहिमा",
+
+    // Active Dispatches
+    active_dispatches_title: "सक्रिय मोहिमा",
+    haversine_routed: "हेवरसाइन मार्गदर्शित",
+    no_dispatches: "सध्या कोणतीही मोहीम सुरू नाही.",
+    reroute_btn: "पथक बदला →",
+    ai_copilot_btn: "AI मदतनीस",
+
+    // Telemetry Banner
+    cyclone_alert: "हवामान विभाग रेड अलर्ट: पूर आणि अतिवृष्टीचा इशारा",
+    telemetry_rainfall: "पावसाचे प्रमाण",
+    telemetry_wind: "वाऱ्याचा वेग",
+    telemetry_tide: "भरतीची पातळी",
+    telemetry_flood_risk: "पूर धोका निर्देशांक",
+    btn_sitrep: "स्थिती अहवाल (SitRep)",
+    btn_mesh: "मेश नेटवर्क टोपोलॉजी",
+    btn_custom_disaster: "सराव सुरू करा",
+    audio_on: "ध्वनी: चालू",
+    audio_off: "ध्वनी: बंद",
+    voice_on: "आवाज अलर्ट: चालू",
+    voice_off: "आवाज अलर्ट: बंद",
+
+    // Categories
+    cat_flood: "पूर आणि पाणी भरणे",
+    cat_trapped: "अडकलेले नागरिक / बचाव",
+    cat_medical: "वैद्यकीय आणीबाणी",
+    cat_shelterless: "बेघर / निवारा गरज",
+    cat_food_water: "अन्न व पिण्याचे पाणी",
+    cat_landslide: "दरड कोसळण्याचा धोका",
+
+    // Severities
+    sev_critical: "अत्यंत गंभीर",
+    sev_high: "उच्च",
+    sev_medium: "मध्यम",
+    sev_low: "सामान्य",
+
+    // Citizen SOS Modal
+    sos_title: "नागरिक आणीबाणी SOS पोर्टल",
+    sos_subtitle: "आणीबाणी नियंत्रण कक्षाशी थेट संपर्क",
+    sos_cat_label: "१. आपत्ती प्रकार",
+    sos_sev_label: "२. तातडीची पातळी",
+    sos_loc_label: "३. घटनेचे ठिकाण",
+    sos_gps_btn: "डिव्हाइस GPS वापरा",
+    sos_desc_label: "४. परिस्थितीचे वर्णन",
+    sos_desc_ph: "अडकलेल्या लोकांची संख्या, पाण्याचा अंदाज, वैद्यकीय गरज सांगा...",
+    sos_phone_label: "संपर्क फोन नंबर",
+    sos_photo_label: "घटनास्थळाचे छायाचित्र",
+    sos_photo_none: "छायाचित्र नाही",
+    sos_submit_btn: "आणीबाणी SOS पाठवा",
+    sos_submitting: "SOS पाठवला जात आहे...",
+    sos_success_title: "आणीबाणी नोंद यशस्वीरीत्या पाठवली!",
+    sos_success_desc: "नोंद आपत्ती निवारण नियंत्रण कक्षाकडे प्रसारित करण्यात आली आहे.",
+    sos_matched_badge: "स्वयंचलित मदत पथक रवाना",
+    sos_escalated_badge: "⚠️ स्थानिक पथके व्यस्त आहेत. नोंद वरिष्ठ अधिकाऱ्यांकडे पाठवली.",
+    sos_return_btn: "नियंत्रण कक्षाकडे परत जा",
+
+    // SMS Modal
+    sms_title: "ऑफलाइन GSM / SMS गेटवे",
+    sms_subtitle: "इंटरनेट नसताना SMS संदेशांचे भौगोलिक विश्लेषण",
+    sms_protocol_title: "ऑफलाइन टेलिफोनी प्रोटोकॉल",
+    sms_protocol_desc: "इंटरनेट खंडित झाल्यास नागरिक SMS पाठवतात: FLOOD [पिनकोड] [तीव्रता] [माहिती]. सहारा संदेशावरून ठिकाण शोधून थेट पथक रवाना करते.",
+    sms_sample_label: "नमुना संदेश:",
+    sms_input_label: "प्राप्त SMS मजकूर:",
+    sms_phone_label: "पाठवणाऱ्याचा मोबाईल नंबर:",
+    sms_send_btn: "SMS संदेश पाठवा",
+    sms_sending: "SMS संदेश तपासला जात आहे...",
+    sms_success_title: "SMS यशस्वीरीत्या डिकोड झाला",
+
+    // Manual Override Modal
+    override_modal_title: "अधिकारी मॅन्युअल बदल",
+    override_modal_sub: "मानवी निर्णयानुसार नवीन पथक वाटप व मार्ग बदल",
+    override_select_unit: "वाटपासाठी पथक निवडा:",
+    override_reason_label: "बदलाचे कारण / सूचना:",
+    override_reason_ph: "उदा. पाण्याचा प्रवाह जास्त / बोटीची गरज",
+    override_submit_btn: "मंजूर करा व पथक रवाना करा",
+    override_submitting: "नवीन पथक पाठवले जात आहे...",
+
+    // Deploy Resource Modal
+    deploy_modal_title: "नवीन आपत्ती पथक तैनात करा",
+    deploy_modal_sub: "नवीन निवारा छावणी, बचाव पथक किंवा अन्न डेपोची नोंद करा",
+    deploy_name_label: "पथकाचे / छावणीचे नाव:",
+    deploy_name_ph: "उदा. SDRF आपत्ती बचाव पथक 08",
+    deploy_type_label: "पथक प्रकार:",
+    deploy_cap_label: "एकूण क्षमता:",
+    deploy_lat_label: "अक्षांश (Lat):",
+    deploy_lng_label: "रेखांश (Lng):",
+    deploy_contact_label: "प्रभारी अधिकारी / संपर्क:",
+    deploy_equipment_label: "उपलब्ध साहित्य व उपकरणे:",
+    deploy_submit_btn: "सक्रिय ग्रिडमध्ये पथक जोडा",
+    deploy_submitting: "नोंदणी होत आहे...",
+
+    // Quick Guided Tour
+    guide_modal_title: "सहारा कमांड ग्रिड: द्रुत मार्गदर्शिका",
+    guide_modal_sub: "६० सेकंदात प्रणाली कशी वापरावी",
+    guide_step1_title: "१. थेट स्थानिक वाटप",
+    guide_step1_desc: "प्रत्येक नोंदीसाठी हेवरसाइन अंतर मोजून सर्वात जवळच्या उपलब्ध पथकाला थेट दिशा व वेळ दाखवली जाते.",
+    guide_step2_title: "२. ऑफलाइन SMS गेटवे",
+    guide_step2_desc: "इंटरनेट नसतानाही पिनकोड असलेल्या साध्या SMS संदेशांवरून थेट आपत्ती निवारण सुरू होते.",
+    guide_step3_title: "३. AI मदतनीस व व्हॉट्सॲप आदेश",
+    guide_step3_desc: "प्रत्येक घटनेचा AI धोका स्कोअर, कारण आणि थेट व्हॉट्सॲपवर पाठवता येणारे आदेश एका क्लीकवर मिळतात.",
+    guide_step4_title: "४. बहुस्तरीय नकाशा व पूर धोके",
+    guide_step4_desc: "डार्क, सॅटेलाइट आणि टोपोग्राफी नकाशे आणि मिठी नदीचे पूर क्षेत्र थेट पहा.",
+
+    // Audit Feed
+    audit_title: "सहारा स्वयंचलित समन्वय ऑडिट स्ट्रीम",
+    audit_live: "थेट लॉग",
+    audit_empty: "अद्याप कोणतीही नोंद नाही.",
+
+    // Map labels
+    map_legend_critical: "गंभीर",
+    map_legend_high: "उच्च",
+    map_legend_unit: "पथक",
+    map_legend_inundation: "पूर क्षेत्र",
+    map_drop_help: "आणीबाणी पिन टाकण्यासाठी नकाशावर कुठेही क्लिक करा"
+  }
+};

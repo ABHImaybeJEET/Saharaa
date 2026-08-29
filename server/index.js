@@ -96,7 +96,7 @@ app.post("/api/reports", (req, res) => {
     status: "new",
     phone: phone || "+91 99000 00000",
     source: "web",
-    location_name: location_name || `Coordinate (${lat.toFixed(4)}, ${lng.toFixed(4)})`
+    location_name: location_name || `Coordinate (${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)})`
   };
 
   store.addReport(newReport);
@@ -151,7 +151,37 @@ app.post("/api/sms/incoming", (req, res) => {
   });
 });
 
-// Manual Dispatcher Override / Reassignment
+// Broadcast Emergency Alert from Authority to All Citizens
+app.post("/api/alerts/broadcast", (req, res) => {
+  const { title, message, level, area } = req.body;
+
+  if (!title || !message) {
+    return res.status(400).json({ error: "Alert title and message are required." });
+  }
+
+  const newAlert = {
+    id: `alert-${Date.now()}`,
+    level: level || "red",
+    title,
+    message,
+    area: area || "Coastal Metro Region",
+    timestamp: new Date().toISOString(),
+    issued_by: "Disaster Management Authority (Authority Broadcast)"
+  };
+
+  store.addBroadcastAlert(newAlert);
+  store.addAuditLog(`[AUTHORITY BROADCAST] ${newAlert.level.toUpperCase()} ALERT: "${newAlert.title}" broadcasted across all channels`, "warning");
+
+  io.emit("state_update", {
+    type: "alert_broadcasted",
+    data: store.getState(),
+    alert: newAlert
+  });
+
+  res.status(201).json({ success: true, alert: newAlert, data: store.getState() });
+});
+
+// Manual Dispatcher Override / Reassignment / 1-Click Direct Dispatch
 app.post("/api/allocations/override", (req, res) => {
   const { report_id, resource_id, notes } = req.body;
 
@@ -199,8 +229,8 @@ app.post("/api/allocations/override", (req, res) => {
     eta_minutes: etaMinutes,
     assigned_at: new Date().toISOString(),
     status: "active",
-    assigned_by: "HUMAN_DISPATCHER_OVERRIDE",
-    notes: notes || "Dispatcher judgment reassignment"
+    assigned_by: "DISPATCHER_DISPATCH",
+    notes: notes || "Dispatcher resource allocation"
   };
   store.addAllocation(newAlloc);
 
@@ -208,7 +238,7 @@ app.post("/api/allocations/override", (req, res) => {
   store.updateReport(report.id, { status: "resource_assigned" });
 
   store.addAuditLog(
-    `[MANUAL OVERRIDE] Dispatcher manually re-routed ${newResource.name} to Incident #${report.id.slice(-6)} (${distanceKm} km away). Reason: ${notes || 'Tactical priority override'}`,
+    `[DISPATCHED] Authority assigned ${newResource.name} to Incident #${report.id.slice(-6)} (${distanceKm} km away, ETA ${etaMinutes}m). Notes: ${notes || 'Priority dispatch'}`,
     "override"
   );
 
@@ -307,35 +337,63 @@ app.post("/api/demo/reset", (req, res) => {
   res.json({ success: true, data: store.getState() });
 });
 
-// Flood Scenario Steps for Live Judging Demonstration
+// 5-Step Progressive Disaster Simulation for Demonstrations
 const SCENARIO_STEPS = [
   {
     step: 1,
-    title: "Initial Cyclone Gusts & Waterlogging",
+    title: "1. Cyclone Gusts & High Tide Waterlogging",
     description: "Citizen reports emergency flood condition near Kurla Station via web form.",
     report: {
       category: "flood",
       severity: "high",
       lat: 19.0660,
       lng: 72.8790,
-      description: "Mithi river swelling rapidly. 6 commuters stranded at Kurla West bus stand.",
+      description: "Mithi river swelling rapidly. 6 commuters stranded at Kurla West bus stand with rising tide.",
       location_name: "Kurla West Station Hub",
       phone: "+91 98200 44556"
     }
   },
   {
     step: 2,
-    title: "SMS Offline Trigger: Critical Medical Emergency",
-    description: "Offline citizen sends feature-phone SMS from Bandra Reclamation.",
+    title: "2. Offline GSM / SMS: Critical Inundation",
+    description: "Offline citizen in mobile data blackout sends plain text SMS from Bandra Reclamation.",
     sms: {
-      text: "FLOOD 400050 CRITICAL Oxygen patient on ventilator ground floor submerged call 9833445566",
+      text: "FLOOD 400050 CRITICAL 4 people stranded on rooftop ground floor submerged need boat +919833445566",
       phone: "+91 98334 45566"
     }
   },
   {
     step: 3,
-    title: "Capacity Saturation & Escalation Test",
-    description: "Mass evacuation call in Andheri. Triggers saturation and flags unassigned report for human dispatcher review.",
+    title: "3. Rooftop Medical Emergency (Oxygen Patient)",
+    description: "Urgent medical SOS received for elderly patient needing immediate mobile ICU evacuation.",
+    report: {
+      category: "medical",
+      severity: "critical",
+      lat: 19.0550,
+      lng: 72.8320,
+      description: "Diabetic oxygen-dependent patient on 1st floor balcony. Floodwater rising to 4.5ft.",
+      location_name: "Bandra West, 16th Road",
+      phone: "+91 98199 22334"
+    }
+  },
+  {
+    step: 4,
+    title: "4. Slum Shelter Collapse & Mass Displacement",
+    description: "Cyclone gale winds rip off tin roofs in Andheri MIDC, displacing 35 families.",
+    report: {
+      category: "shelterless",
+      severity: "high",
+      lat: 19.1150,
+      lng: 72.8700,
+      description: "Severe roof destruction across 30 chawl houses. 35 families with infants need immediate dry shelter & food.",
+      location_name: "Andheri East MIDC Settlement",
+      phone: "+91 98222 33445"
+    }
+  },
+  {
+    step: 5,
+    title: "5. Capacity Saturation & Inter-Agency Escalation",
+    description: "Mass evacuation call in Andheri basement collapse. Triggers saturation and flags unassigned report for human dispatcher review.",
     report: {
       category: "trapped",
       severity: "critical",
@@ -353,7 +411,7 @@ app.post("/api/demo/scenario-step", (req, res) => {
   const targetStep = SCENARIO_STEPS.find(s => s.step === parseInt(stepNumber, 10));
 
   if (!targetStep) {
-    return res.status(400).json({ error: "Invalid scenario step number (1 to 3)" });
+    return res.status(400).json({ error: "Invalid scenario step number (1 to 5)" });
   }
 
   let result;
