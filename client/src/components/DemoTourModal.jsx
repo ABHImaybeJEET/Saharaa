@@ -5,22 +5,19 @@ import {
   Sparkles, 
   CheckCircle, 
   ArrowRight, 
-  ArrowLeft,
-  Radio, 
-  Send, 
-  Zap, 
-  Building, 
-  Compass, 
-  Play,
-  Pause,
-  Info,
-  MapPin,
-  Clock,
-  ShieldCheck,
+  ArrowLeft, 
+  Play, 
+  Pause, 
+  Info, 
+  MapPin, 
+  Eye,
+  Minimize2,
+  Maximize2,
   Check,
-  ChevronRight
+  Compass,
+  Navigation
 } from "lucide-react";
-import { triggerScenarioStep, broadcastAlert, executeManualOverride } from "../utils/api";
+import { triggerScenarioStep, broadcastAlert } from "../utils/api";
 import { soundEngine } from "../utils/soundEffects";
 
 export default function DemoTourModal({
@@ -34,6 +31,7 @@ export default function DemoTourModal({
   const [currentStep, setCurrentStep] = useState(1);
   const [running, setRunning] = useState(false);
   const [autoPlaying, setAutoPlaying] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const t = translations ? (translations[lang] || translations.en) : {};
 
@@ -42,9 +40,9 @@ export default function DemoTourModal({
       step: 1,
       badge: "STEP 1: INGESTION",
       title: "Citizen Reports Disaster via Web / Mobile",
-      summary: "A citizen stranded by flash flood submits an emergency SOS with coordinates and photos.",
-      mechanism: "Backend receives coordinates (19.066, 72.879), validates emergency payload, logs incident ticket, and triggers spatial matching.",
-      actionLabel: "Simulate & Drop Citizen SOS",
+      summary: "A citizen stranded by flash flood at Milan Subway submits an emergency SOS with coordinates.",
+      whatToLookFor: "👉 Look at the Map: A new red pulsating incident pin appears near Milan Subway, and the incident counter updates in the top HUD.",
+      actionLabel: "Drop Live Citizen SOS",
       execute: async () => {
         await triggerScenarioStep(1);
         if (onSelectView) onSelectView("authority");
@@ -53,9 +51,9 @@ export default function DemoTourModal({
     {
       step: 2,
       badge: "STEP 2: SPATIAL MATCH",
-      title: "Real-Time Spatial Distance & Capacity Matching",
-      summary: "Incident appears on the Authority Map. Platform calculates distance to all rescue units.",
-      mechanism: "Haversine formula calculates straight-line distance (1.54 km) and selects NDRF Battalion 05 based on available capacity (18/40).",
+      title: "Haversine Distance & Resource Recommendation",
+      summary: "The platform calculates straight-line distance (1.54 km) to all active boats and ambulances.",
+      whatToLookFor: "👉 Look at the Incident Queue (Right): NDRF Battalion 05 is matched with 1.54 km distance and ~8 min ETA based on free capacity (18/40).",
       actionLabel: "Inspect Spatial Recommendation",
       execute: async () => {
         if (onSelectView) onSelectView("authority");
@@ -65,8 +63,8 @@ export default function DemoTourModal({
       step: 3,
       badge: "STEP 3: 1-CLICK DISPATCH",
       title: "Authority 1-Click Dispatch & Sortie Routing",
-      summary: "Incident commander deploys recommended unit with a single tap. Live animated route appears.",
-      mechanism: "Unit capacity increments (18/40 → 19/40), status updates to 'en_route', ETA is estimated (~6 mins), and animated route is drawn.",
+      summary: "Commander dispatches the unit. Live animated dashed route connects the rescue boat to the flood site.",
+      whatToLookFor: "👉 Look at the Map & Queue: An animated cyan transit line is drawn between the boat and the citizen. The unit load increments to 19/40.",
       actionLabel: "Authorize Direct Dispatch",
       execute: async () => {
         if (onSelectView) onSelectView("authority");
@@ -75,9 +73,9 @@ export default function DemoTourModal({
     {
       step: 4,
       badge: "STEP 4: BROADCAST",
-      title: "Authority Issues Official Disaster Red Alert",
-      summary: "Authority broadcasts a regional flash flood warning to all citizens and evacuation teams.",
-      mechanism: "WebSocket broadcast pushes Red Alert bulletin across web clients and offline SMS mesh with evacuation guidance.",
+      title: "Authority Broadcasts Disaster Red Alert",
+      summary: "Authority pushes an official flash flood emergency bulletin across WebSocket and SMS channels.",
+      whatToLookFor: "👉 Look at the Top Banner & Citizen View: Red Alert emergency warning is pushed to all connected clients and offline SMS gateways.",
       actionLabel: "Broadcast Disaster Red Alert",
       execute: async () => {
         await broadcastAlert({
@@ -91,11 +89,11 @@ export default function DemoTourModal({
     },
     {
       step: 5,
-      badge: "STEP 5: CITIZEN EVACUATION",
+      badge: "STEP 5: EVACUATION",
       title: "Citizen Receives Warning & Finds Nearest Shelter",
-      summary: "Citizen portal updates with the Red Alert warning, open shelter capacity, and GPS directions.",
-      mechanism: "Citizens view verified shelter bed counts, supply status, emergency helplines, and 1-click Google Maps navigation.",
-      actionLabel: "View Citizen Evacuation Match",
+      summary: "Citizen view shows the emergency bulletin, open relief camps, verified bed counts, and Google Maps directions.",
+      whatToLookFor: "👉 Look at the Citizen Portal: The 'Shelters' tab highlights St. Jude Relief Shelter with verified bed availability and 1-click turn-by-turn navigation.",
+      actionLabel: "View Citizen Shelter Match",
       execute: async () => {
         if (onSelectView) onSelectView("citizen");
       }
@@ -112,7 +110,7 @@ export default function DemoTourModal({
         } else {
           setAutoPlaying(false);
         }
-      }, 4500);
+      }, 5000);
     }
     return () => clearTimeout(timer);
   }, [autoPlaying, currentStep, isOpen]);
@@ -149,41 +147,89 @@ export default function DemoTourModal({
     }
   };
 
+  // Minimized Floating Pill View
+  if (isMinimized) {
+    return (
+      <div className="fixed bottom-4 right-4 z-[9999] animate-in slide-in-from-bottom-3 duration-200">
+        <div className="bg-theme-card text-theme-primary border-2 border-red-500 rounded-2xl shadow-2xl p-2.5 flex items-center space-x-2.5 backdrop-blur-xl">
+          <div className="w-7 h-7 rounded-lg bg-red-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-md">
+            {currentStep}/5
+          </div>
+          <div className="text-xs font-bold truncate max-w-[200px]">
+            {currentStepObj.title}
+          </div>
+          <button
+            onClick={() => handleNext()}
+            className="p-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-xs"
+            title="Next Step"
+          >
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setIsMinimized(false)}
+            className="p-1.5 rounded-lg bg-theme-subtle hover:bg-slate-200 dark:hover:bg-slate-800 text-theme-primary"
+            title="Expand Guide"
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-theme-muted hover:text-theme-primary"
+            title="Close Guide"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Floating Docked Guide Drawer (Non-blocking bottom-right on desktop, bottom sheet on mobile)
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md overflow-y-auto font-sans">
-      <div className="bg-theme-card text-theme-primary border border-theme-border rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+    <div className="fixed bottom-2 right-2 sm:bottom-4 sm:right-4 z-[9999] w-full max-w-full sm:max-w-md md:max-w-lg px-2 sm:px-0 animate-in slide-in-from-bottom-5 duration-300 font-sans pointer-events-auto">
+      <div className="bg-theme-card text-theme-primary border-2 border-red-500/90 rounded-2xl shadow-2xl overflow-hidden flex flex-col backdrop-blur-xl">
         
         {/* Header */}
-        <div className="p-4 border-b border-theme-border bg-theme-subtle flex items-center justify-between">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-red-600 to-amber-600 flex items-center justify-center text-white font-bold shadow-md shadow-red-600/30">
-              <Sparkles className="w-4 h-4" />
+        <div className="p-3 bg-theme-subtle border-b border-theme-border flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-red-600 to-amber-600 flex items-center justify-center text-white font-bold shadow-sm">
+              <Sparkles className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider font-mono text-theme-primary">
-                Interactive Disaster Response Walkthrough
-              </h2>
-              <p className="text-xs text-theme-muted">
-                Step-by-step interactive demonstration of the end-to-end coordination workflow
-              </p>
+              <div className="flex items-center space-x-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider font-mono text-theme-primary">
+                  Interactive Crisis Guide
+                </span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-red-500/15 text-red-600 dark:text-red-400 font-mono font-bold">
+                  {currentStep} / {STEPS.length}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <button
               onClick={() => {
                 soundEngine.playUiClick();
                 setAutoPlaying(!autoPlaying);
               }}
-              className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all border ${
+              className={`flex items-center space-x-1 px-2 py-0.5 rounded-lg text-[11px] font-mono font-bold transition-all border ${
                 autoPlaying 
                   ? "bg-amber-600 text-white border-amber-500 shadow-sm" 
-                  : "bg-theme-card text-theme-secondary border-theme-border hover:border-theme-medium"
+                  : "bg-theme-card text-theme-secondary border-theme-border"
               }`}
-              title={autoPlaying ? "Pause Auto Play" : "Auto Play 5-Step Demo"}
+              title={autoPlaying ? "Pause Auto Guide" : "Auto Guide"}
             >
-              {autoPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              <span>{autoPlaying ? "Auto: ON" : "Auto-Play"}</span>
+              {autoPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+              <span>{autoPlaying ? "Auto" : "Play"}</span>
+            </button>
+
+            <button
+              onClick={() => setIsMinimized(true)}
+              className="p-1 rounded-lg text-theme-muted hover:text-theme-primary hover:bg-slate-200 dark:hover:bg-slate-800 transition-all"
+              title="Minimize Guide (Keep watching screen)"
+            >
+              <Minimize2 className="w-3.5 h-3.5" />
             </button>
 
             <button
@@ -192,15 +238,16 @@ export default function DemoTourModal({
                 setAutoPlaying(false);
                 onClose();
               }}
-              className="p-1.5 rounded-lg text-theme-muted hover:text-theme-primary hover:bg-slate-200 dark:hover:bg-slate-800 transition-all"
+              className="p-1 rounded-lg text-theme-muted hover:text-theme-primary hover:bg-slate-200 dark:hover:bg-slate-800 transition-all"
+              title="Close Guide"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* Step Indicator Pills */}
-        <div className="p-3 border-b border-theme-border bg-theme-card flex items-center justify-between gap-1 overflow-x-auto">
+        {/* Step Progress Indicators */}
+        <div className="p-2 border-b border-theme-border bg-theme-card flex items-center justify-between gap-1">
           {STEPS.map((s) => {
             const isPast = s.step < currentStep;
             const isCurrent = s.step === currentStep;
@@ -209,96 +256,63 @@ export default function DemoTourModal({
               <button
                 key={s.step}
                 onClick={() => handleExecuteStep(s.step)}
-                className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center space-x-1.5 whitespace-nowrap ${
+                className={`flex-1 py-1 px-1 rounded-lg text-[11px] font-mono font-bold transition-all flex items-center justify-center space-x-1 ${
                   isCurrent
                     ? "bg-red-600 text-white shadow-sm"
                     : isPast
-                    ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                    ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800"
                     : "bg-theme-subtle text-theme-muted hover:text-theme-primary"
                 }`}
+                title={s.title}
               >
                 <span>{s.step}</span>
-                {isPast && <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />}
+                {isPast && <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />}
               </button>
             );
           })}
         </div>
 
-        {/* Active Step Details Container */}
-        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
-          
-          {/* Step Badge & Title */}
-          <div className="space-y-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-extrabold tracking-wider uppercase bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
-              {currentStepObj.badge}
-            </span>
-            <h3 className="text-base font-extrabold text-theme-primary">
+        {/* Active Step Content */}
+        <div className="p-3.5 space-y-2.5 max-h-[300px] overflow-y-auto">
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] font-mono font-extrabold uppercase px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
+                {currentStepObj.badge}
+              </span>
+            </div>
+            <h3 className="text-sm font-extrabold text-theme-primary mt-1">
               {currentStepObj.title}
             </h3>
-            <p className="text-xs text-theme-secondary leading-relaxed font-sans">
+            <p className="text-xs text-theme-secondary mt-0.5 leading-snug">
               {currentStepObj.summary}
             </p>
           </div>
 
-          {/* Under The Hood Explanation Card */}
-          <div className="bg-theme-subtle border border-theme-border rounded-xl p-3.5 space-y-1.5 text-xs">
-            <div className="flex items-center gap-1.5 font-mono font-bold text-theme-primary">
-              <Info className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-              <span>How It Works Under the Hood:</span>
-            </div>
-            <p className="text-xs text-theme-secondary leading-relaxed font-mono">
-              {currentStepObj.mechanism}
-            </p>
-          </div>
-
-          {/* Step Progress Checklist */}
-          <div className="space-y-2 pt-2 border-t border-theme-border">
-            <div className="text-[11px] font-bold uppercase font-mono text-theme-muted">
-              Workflow Checklist:
-            </div>
-            <div className="space-y-1.5">
-              {STEPS.map(s => (
-                <div 
-                  key={s.step}
-                  onClick={() => handleExecuteStep(s.step)}
-                  className={`p-2 rounded-lg text-xs cursor-pointer transition-all flex items-center justify-between ${
-                    s.step === currentStep
-                      ? "bg-red-50 dark:bg-red-950/40 border border-red-400 text-theme-primary font-bold"
-                      : s.step < currentStep
-                      ? "text-emerald-700 dark:text-emerald-300 line-through opacity-75"
-                      : "text-theme-muted opacity-60"
-                  }`}
-                >
-                  <span className="truncate">{s.title}</span>
-                  {s.step < currentStep ? (
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  ) : s.step === currentStep ? (
-                    <span className="w-2 h-2 rounded-full bg-red-600 animate-ping shrink-0"></span>
-                  ) : null}
-                </div>
-              ))}
-            </div>
+          {/* Visual Pointer Callout Box */}
+          <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 text-xs text-amber-900 dark:text-amber-200 leading-relaxed font-sans font-medium flex items-start space-x-2">
+            <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div>{currentStepObj.whatToLookFor}</div>
           </div>
         </div>
 
-        {/* Action Footer */}
-        <div className="p-4 border-t border-theme-border bg-theme-subtle flex items-center justify-between gap-3">
+        {/* Action Controls */}
+        <div className="p-3 border-t border-theme-border bg-theme-subtle flex items-center justify-between gap-2">
           <button
             onClick={handlePrev}
             disabled={currentStep === 1 || running}
-            className="px-3.5 py-2 rounded-xl bg-theme-card hover:bg-slate-200 dark:hover:bg-slate-700 text-theme-secondary text-xs font-bold transition-all border border-theme-border disabled:opacity-30 flex items-center space-x-1"
+            className="px-2.5 py-1.5 rounded-xl bg-theme-card hover:bg-slate-200 dark:hover:bg-slate-700 text-theme-secondary text-xs font-bold transition-all border border-theme-border disabled:opacity-30 flex items-center space-x-1"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft className="w-3 h-3" />
             <span>Prev</span>
           </button>
 
           <button
             onClick={handleNext}
             disabled={running}
-            className="flex-1 py-2.5 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shadow-red-600/30 flex items-center justify-center space-x-2 disabled:opacity-50"
+            className="flex-1 py-2 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shadow-red-600/30 flex items-center justify-center space-x-1.5 disabled:opacity-50"
           >
             <span>{running ? "EXECUTING..." : currentStep === STEPS.length ? "Finish Tour" : currentStepObj.actionLabel}</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
