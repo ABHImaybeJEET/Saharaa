@@ -102,12 +102,22 @@ export default function ExecutiveSummaryHeader({
             </span>
           </div>
 
-          <div className="flex items-center space-x-2 text-xs font-medium pt-1.5 border-t border-theme-border text-theme-secondary">
+          <div className="flex items-center space-x-1.5 text-[11px] font-medium pt-1.5 border-t border-theme-border text-theme-secondary flex-wrap">
             <span className="text-red-600 dark:text-red-400 font-bold">{criticalCount} Crit</span>
             <span>•</span>
             <span className="text-orange-600 dark:text-orange-400 font-bold">{highCount} High</span>
-            <span>•</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold">{resolvedCount} Done</span>
+            {mediumCount > 0 && (
+              <>
+                <span>•</span>
+                <span className="text-amber-600 dark:text-amber-400 font-bold">{mediumCount} Med</span>
+              </>
+            )}
+            {resolvedCount > 0 && (
+              <>
+                <span>•</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold">{resolvedCount} Done</span>
+              </>
+            )}
           </div>
         </div>
 
