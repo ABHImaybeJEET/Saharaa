@@ -124,8 +124,8 @@ export default function CommanderGuideModal({
             </div>
             <ol className="list-decimal list-inside space-y-1 text-xs text-theme-secondary leading-relaxed font-sans">
               <li>Click <strong>"+ SOS"</strong> to drop a Critical Flood emergency on the map.</li>
-              <li>Use <strong>"1-Click Demo Tour"</strong> in the top header to run through the full end-to-end incident lifecycle.</li>
-              <li>Inspect any incident to view AI risk scoring (0-100) and 1-Click Dispatch.</li>
+              <li>Use <strong>"Interactive Guide"</strong> in the top header to run through the full end-to-end incident lifecycle.</li>
+              <li>Inspect any incident to view spatial risk scoring (0-100) and 1-Click Dispatch.</li>
             </ol>
           </div>
 

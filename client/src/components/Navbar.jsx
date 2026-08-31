@@ -8,7 +8,8 @@ import {
   Users, 
   Sun, 
   Moon, 
-  Radio
+  Radio,
+  Compass
 } from "lucide-react";
 import { soundEngine } from "../utils/soundEffects";
 
@@ -113,9 +114,9 @@ export default function Navbar({
                 if (onOpenDemoTour) onOpenDemoTour();
               }}
               className="p-1.5 rounded-lg bg-amber-500 text-white shadow-sm"
-              title="1-Click Demo Tour"
+              title="Interactive System Guide"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Compass className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -123,17 +124,17 @@ export default function Navbar({
         {/* Right Controls for Tablet & Desktop */}
         <div className="hidden sm:flex items-center space-x-2 shrink-0">
           
-          {/* Interactive Demo Tour */}
+          {/* Interactive System Guide */}
           <button
             onClick={() => {
               soundEngine.playUiClick();
               if (onOpenDemoTour) onOpenDemoTour();
             }}
             className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold transition-all shadow-sm active:scale-95"
-            title="Run 5-Step End-to-End Demo"
+            title="Interactive Step-by-Step Crisis Response Guide"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>1-Click Demo Tour</span>
+            <Compass className="w-3.5 h-3.5" />
+            <span>Interactive Guide</span>
           </button>
 
           {/* Theme Toggle */}
