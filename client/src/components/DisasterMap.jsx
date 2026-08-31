@@ -34,30 +34,21 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// 100% Free, Keyless, Watermark-Free Open Tile Layer Presets
+// 100% Free, Zero-Watermark, Keyless Map Tile Layer Presets
 const TILE_LAYERS = {
   street: {
     name: "Streets",
-    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    subdomains: ["a", "b", "c"],
-    attribution: '&copy; OpenStreetMap contributors'
-  },
-  light: {
-    name: "Clean Light",
-    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-    subdomains: ["a", "b", "c", "d"],
-    attribution: '&copy; OpenStreetMap &bull; &copy; CARTO'
+    url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   },
   dark: {
     name: "Dark Tactical",
-    url: "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png",
-    subdomains: ["a", "b", "c", "d"],
-    attribution: '&copy; OpenStreetMap &bull; &copy; CARTO'
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+    attribution: '&copy; Esri &bull; OpenStreetMap contributors'
   },
   satellite: {
     name: "Satellite",
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    subdomains: [],
     attribution: '&copy; Esri World Imagery'
   }
 };
