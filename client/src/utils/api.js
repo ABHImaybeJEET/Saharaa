@@ -1,9 +1,25 @@
 // client/src/utils/api.js
 import { io } from "socket.io-client";
 
-const API_BASE = window.location.port === "5173" ? "http://localhost:4000" : "";
+// In production, use VITE_API_URL if defined, or relative path if served from same origin, or localhost for local dev
+const getApiBase = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (typeof window !== "undefined") {
+    // If dev server on 5173, point to backend on 4000
+    if (window.location.port === "5173") {
+      return "http://localhost:4000";
+    }
+    // In production build or custom port, use current origin
+    return window.location.origin;
+  }
+  return "http://localhost:4000";
+};
 
-export const socket = io(API_BASE || undefined, {
+export const API_BASE = getApiBase();
+
+export const socket = io(API_BASE, {
   transports: ["websocket", "polling"],
   reconnectionAttempts: 10,
   reconnectionDelay: 1000,

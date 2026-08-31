@@ -3,10 +3,15 @@ import express from "express";
 import http from "http";
 import { Server as SocketIOServer } from "socket.io";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import { store, DEFAULT_REGION } from "./store.js";
 import { matchReportToResource, calculateHaversineDistanceKm } from "./allocation.js";
 import { parseIncomingSms } from "./smsGateway.js";
 import { IMD_WEATHER_ALERTS } from "./imdAlerts.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
@@ -66,6 +71,11 @@ function processReportAllocation(report, assignedBy = "AUTO_SYSTEM") {
 }
 
 // ---------------- REST API ROUTES ----------------
+
+// Health check endpoint for deployment platforms (Render, Railway, Fly.io, Vercel)
+app.get("/api/health", (req, res) => {
+  res.json({ status: "healthy", timestamp: new Date().toISOString(), service: "saharaa-disaster-grid" });
+});
 
 // Get Full State
 app.get("/api/state", (req, res) => {
@@ -460,6 +470,20 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log(`[Socket.io] Client disconnected: ${socket.id}`);
+  });
+});
+
+// Serve frontend dist files in production (single-container deployment)
+const distPath = path.join(__dirname, "../client/dist");
+app.use(express.static(distPath));
+
+// Catch-all route to serve React index.html for SPA client routing
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/api") || req.path.startsWith("/socket.io")) {
+    return next();
+  }
+  res.sendFile(path.join(distPath, "index.html"), (err) => {
+    if (err) next();
   });
 });
 
