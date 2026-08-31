@@ -52,12 +52,12 @@ export default function Navbar({
               <ShieldAlert className="w-4 h-4" />
             </div>
             <div>
-              <div className="flex items-center space-x-1.5">
+              <div className="flex items-center space-x-2">
                 <span className="text-sm font-black tracking-wider text-theme-primary font-sans">
                   SAHARAA
                 </span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 font-mono font-bold">
-                  PS-05
+                <span className="text-[10px] text-theme-muted font-medium hidden xs:inline">
+                  Disaster Coordination
                 </span>
                 <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} title={isConnected ? "Grid Online" : "Grid Offline"}></span>
               </div>
@@ -130,7 +130,7 @@ export default function Navbar({
               if (onOpenDemoTour) onOpenDemoTour();
             }}
             className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold transition-all shadow-sm active:scale-95"
-            title="Run 5-Step PS-05 End-to-End Demo"
+            title="Run 5-Step End-to-End Demo"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>1-Click Demo Tour</span>

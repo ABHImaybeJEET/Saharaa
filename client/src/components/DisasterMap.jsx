@@ -34,27 +34,31 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// Google Maps & Tactical Tile Layer Presets
+// 100% Free, Keyless, Watermark-Free Open Tile Layer Presets
 const TILE_LAYERS = {
-  google_road: {
-    name: "Google Streets",
-    url: "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
-    attribution: '&copy; Google Maps'
+  street: {
+    name: "Streets",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    subdomains: ["a", "b", "c"],
+    attribution: '&copy; OpenStreetMap contributors'
   },
-  google_sat: {
-    name: "Google Hybrid",
-    url: "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
-    attribution: '&copy; Google Maps'
-  },
-  google_terrain: {
-    name: "Google Terrain",
-    url: "https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}",
-    attribution: '&copy; Google Maps'
+  light: {
+    name: "Clean Light",
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    subdomains: ["a", "b", "c", "d"],
+    attribution: '&copy; OpenStreetMap &bull; &copy; CARTO'
   },
   dark: {
     name: "Dark Tactical",
     url: "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png",
-    attribution: '&copy; CARTO &bull; OpenStreetMap'
+    subdomains: ["a", "b", "c", "d"],
+    attribution: '&copy; OpenStreetMap &bull; &copy; CARTO'
+  },
+  satellite: {
+    name: "Satellite",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    subdomains: [],
+    attribution: '&copy; Esri World Imagery'
   }
 };
 
@@ -350,13 +354,13 @@ export default function DisasterMap({
   const t = translations ? (translations[lang] || translations.en) : {};
 
   const [filterMode, setFilterMode] = useState("all");
-  const [tileLayerKey, setTileLayerKey] = useState(theme === "light" ? "google_road" : "dark");
+  const [tileLayerKey, setTileLayerKey] = useState(theme === "light" ? "street" : "dark");
   const [showRadiusCircles, setShowRadiusCircles] = useState(true);
   const [showInundationZones, setShowInundationZones] = useState(true);
 
   // Sync default tile layer when theme changes
   useEffect(() => {
-    setTileLayerKey(theme === "light" ? "google_road" : "dark");
+    setTileLayerKey(theme === "light" ? "street" : "dark");
   }, [theme]);
 
   const displayedReports = reports.filter(r => {
@@ -398,7 +402,7 @@ export default function DisasterMap({
     }
   };
 
-  const activeTileConfig = TILE_LAYERS[tileLayerKey] || TILE_LAYERS.google_road;
+  const activeTileConfig = TILE_LAYERS[tileLayerKey] || TILE_LAYERS.street;
 
   return (
     <div className="relative isolate z-0 w-full h-[360px] sm:h-[420px] lg:h-[480px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm bg-slate-100 dark:bg-slate-950 flex flex-col shrink-0 font-sans">
@@ -431,14 +435,14 @@ export default function DisasterMap({
           ))}
         </div>
 
-        {/* Right: Google Maps Base Switcher & Recenter Controls */}
+        {/* Right: Map Base Switcher & Recenter Controls */}
         <div className="pointer-events-auto flex items-center space-x-1.5 p-1 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-md text-xs">
           
           {/* Tile Layer Selector */}
           <div className="flex items-center space-x-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold">
             {[
-              { key: "google_road", label: "Street" },
-              { key: "google_sat", label: "Satellite" },
+              { key: "street", label: "Street" },
+              { key: "satellite", label: "Satellite" },
               { key: "dark", label: "Dark" }
             ].map(l => (
               <button
@@ -483,7 +487,8 @@ export default function DisasterMap({
             key={tileLayerKey}
             attribution={activeTileConfig.attribution}
             url={activeTileConfig.url}
-            maxZoom={20}
+            subdomains={activeTileConfig.subdomains || ["a", "b", "c", "d"]}
+            maxZoom={19}
           />
 
           <MapClickHandler onMapClick={onMapClick} />
