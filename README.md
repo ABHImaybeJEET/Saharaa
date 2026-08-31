@@ -1,17 +1,24 @@
-# SAHARAA (सहारा) — PS-05: Real-Time Disaster Early-Warning & Resource Coordination Platform
+# SAHARAA (सहारा) — Real-Time Disaster Early-Warning & Resource Coordination Platform
 
-> **Problem Statement (PS-05)**: A real-time, zero-friction disaster coordination and early-warning mesh connecting citizens, authorities, and field rescue teams during extreme flood & cyclone emergencies.
+> **Emergency Coordination Grid**: A real-time, zero-friction disaster coordination and early-warning mesh connecting citizens, authorities, and field rescue teams during extreme flood & cyclone emergencies.
 
 ---
 
-## 🎯 Core Problem & Streamlined Architecture
+## 📚 Complete Technical Documentation
+
+For the deep-dive system architecture, mathematical formulas, data schemas, API specifications, and workflow sequence diagrams, please refer to:
+👉 **[TECHNICAL_DOCUMENTATION.md](file:///c:/Users/abhij/Saharaa/TECHNICAL_DOCUMENTATION.md)**
+
+---
+
+## 🎯 Core Capabilities & System Overview
 
 The platform directly answers the five critical emergency questions:
 1. **What is happening?** — Real-time categorized citizen SOS reports and IMD/DDMA disaster early warnings.
 2. **Where?** — Centerpiece interactive geospatial map with high-risk flood inundation polygons.
 3. **How severe?** — Clear color-coded triage indicators (Critical, High, Medium, Low).
 4. **What resources are available?** — Live tracking of rescue teams (NDRF/SDRF boats) and relief shelters with real-time capacity and headroom.
-5. **What action should I take?** — **1-Click Smart Dispatch**: The system calculates straight-line distances and recommends the closest, suitable, available unit for immediate authority dispatch.
+5. **What action should I take?** — **1-Click Smart Dispatch**: Automated Haversine spatial matching calculates straight-line distances and recommends the closest available rescue unit for instant commander deployment.
 
 ---
 
@@ -38,22 +45,23 @@ The platform directly answers the five critical emergency questions:
 
 ---
 
-## 🎬 30-Second PS-05 Judge Demo Script
+## 🧭 Step-by-Step Interactive Guide
 
-Click the **`⚡ 1-Click Demo Tour`** button in the top navbar to run the end-to-end workflow:
+Click the **`🧭 Interactive Guide`** button in the top navbar to run through the guided end-to-end crisis lifecycle:
 
-1. **Step 1 — Citizen Reports Disaster**: Citizen sends a critical flood SOS at Milan Subway.
-2. **Step 2 — Incident Appears on Authority Map**: Real-time marker appears with live distance calculation.
-3. **Step 3 — Authority Dispatches Recommended Unit**: System recommends nearest NDRF boat (1.5 km); commander clicks Dispatch with 1 tap.
-4. **Step 4 — Authority Broadcasts Disaster Alert**: Commander broadcasts an IMD Red Alert flash flood warning.
-5. **Step 5 — Citizen Receives Alert & Finds Shelter**: Citizen portal live updates with the alert and directs user to the nearest open relief camp.
+1. **Step 1 — Ingestion**: Citizen sends a critical flood SOS at Milan Subway.
+2. **Step 2 — Spatial Match**: Real-time marker appears with live Haversine distance calculation to nearest available boat.
+3. **Step 3 — 1-Click Dispatch**: Commander clicks Dispatch to assign unit; live animated route is drawn.
+4. **Step 4 — Broadcast Warning**: Commander broadcasts an IMD Red Alert flash flood warning.
+5. **Step 5 — Citizen Evacuation**: Citizen portal updates with the alert and directs user to the nearest open relief camp.
 
 ---
 
 ## 🛠️ Tech Stack & Implementation Details
 
-- **Frontend**: React 18, Vite, Tailwind CSS (with clean Dark/Light theme tokens), Leaflet & React-Leaflet, Lucide Icons, Socket.io Client, Web Audio API Sound Synthesizer.
+- **Frontend**: React 18, Vite, Tailwind CSS (with CSS variable design tokens), Leaflet & React-Leaflet, Lucide Icons, Socket.io Client, Web Audio API Sound Synthesizer.
 - **Backend**: Node.js, Express, Socket.io Server, Haversine Spatial Matching Engine, Regex NLP SMS Ingestion Parser.
+- **Geospatial Tiles**: 100% Free, Keyless Esri Canvas Dark Gray, Esri World Imagery Satellite, and OpenStreetMap Standard.
 - **Localization**: 100% complete multi-language support across English (`EN`), Hindi (`हि`), and Marathi (`म`).
 - **Themes**: High-contrast Dark Tactical and Light Operations Center themes.
 
@@ -64,6 +72,8 @@ Click the **`⚡ 1-Click Demo Tour`** button in the top navbar to run the end-to
 ```bash
 # 1. Install dependencies
 npm install
+npm install --prefix client
+npm install --prefix server
 
 # 2. Run backend & frontend concurrently
 npm run dev
@@ -71,3 +81,9 @@ npm run dev
 
 - **Frontend**: `http://localhost:5173`
 - **Backend API**: `http://localhost:4000`
+
+### Production Build
+```bash
+npm run build --prefix client
+node server/index.js
+```
