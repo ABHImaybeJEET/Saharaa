@@ -48,21 +48,33 @@ export default function ExecutiveSummaryHeader({
     return () => clearInterval(interval);
   }, []);
 
-  // Compute breakdown stats
+  // Compute breakdown stats dynamically
   const totalReports = reports.length;
+  const activeReportsCount = reports.filter(r => r.status !== "resolved").length;
   const criticalCount = reports.filter(r => r.severity === "critical" && r.status !== "resolved").length;
   const highCount = reports.filter(r => r.severity === "high" && r.status !== "resolved").length;
-  const activeSorties = allocations.filter(a => a.status === "active").length;
+  const mediumCount = reports.filter(r => r.severity === "medium" && r.status !== "resolved").length;
   const resolvedCount = reports.filter(r => r.status === "resolved").length;
 
   const floodCount = reports.filter(r => r.category === "flood" && r.status !== "resolved").length;
   const medicalCount = reports.filter(r => r.category === "medical" && r.status !== "resolved").length;
   const shelterCount = reports.filter(r => r.category === "shelterless" && r.status !== "resolved").length;
 
+  const activeAllocations = allocations.filter(a => a.status === "active");
+  const activeSorties = activeAllocations.length;
+
+  const avgDistance = activeAllocations.length > 0
+    ? (activeAllocations.reduce((sum, a) => sum + (parseFloat(a.distance_km) || 0), 0) / activeAllocations.length).toFixed(1)
+    : "1.4";
+  const avgEta = activeAllocations.length > 0
+    ? Math.round(activeAllocations.reduce((sum, a) => sum + (parseInt(a.eta_minutes, 10) || 0), 0) / activeAllocations.length)
+    : 6;
+
   const totalCapacity = resources.reduce((sum, r) => sum + r.capacity, 0);
   const totalLoad = resources.reduce((sum, r) => sum + r.current_load, 0);
   const freeCapacity = Math.max(0, totalCapacity - totalLoad);
-  const capacityPct = totalCapacity > 0 ? Math.round((freeCapacity / totalCapacity) * 100) : 0;
+  const occupancyPct = totalCapacity > 0 ? Math.round((totalLoad / totalCapacity) * 100) : 0;
+  const freePct = 100 - occupancyPct;
 
   return (
     <div className="w-full bg-theme-card border border-theme-border rounded-2xl p-3 sm:p-4 shadow-sm space-y-3 transition-colors duration-200">
@@ -83,15 +95,15 @@ export default function ExecutiveSummaryHeader({
 
           <div className="my-1.5 flex items-baseline space-x-1.5">
             <span className="text-2xl sm:text-3xl font-extrabold text-red-600 dark:text-red-400">
-              {totalReports - resolvedCount}
+              {activeReportsCount}
             </span>
             <span className="text-xs text-theme-muted">
-              / {totalReports} total
+              / {totalReports} Total
             </span>
           </div>
 
           <div className="flex items-center space-x-2 text-xs font-medium pt-1.5 border-t border-theme-border text-theme-secondary">
-            <span className="text-red-600 dark:text-red-400 font-bold">{criticalCount} Critical</span>
+            <span className="text-red-600 dark:text-red-400 font-bold">{criticalCount} Crit</span>
             <span>•</span>
             <span className="text-orange-600 dark:text-orange-400 font-bold">{highCount} High</span>
             <span>•</span>
@@ -115,13 +127,13 @@ export default function ExecutiveSummaryHeader({
               {activeSorties}
             </span>
             <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-              ● Teams In Transit
+              ● Dispatched
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-xs text-theme-secondary pt-1.5 border-t border-theme-border">
-            <span>Avg: <strong className="text-theme-primary">1.6 km</strong></span>
-            <span>ETA: <strong className="text-cyan-600 dark:text-cyan-400 font-bold">~7 mins</strong></span>
+          <div className="flex items-center justify-between text-xs text-theme-secondary pt-1.5 border-t border-theme-border font-mono">
+            <span>Avg: <strong className="text-theme-primary">{avgDistance} km</strong></span>
+            <span>ETA: <strong className="text-cyan-600 dark:text-cyan-400 font-bold">~{avgEta}m</strong></span>
           </div>
         </div>
 
@@ -138,18 +150,20 @@ export default function ExecutiveSummaryHeader({
 
           <div className="my-1.5 flex items-baseline space-x-1.5">
             <span className="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">
-              {capacityPct}%
+              {freeCapacity}
             </span>
             <span className="text-xs text-theme-muted">
-              ({freeCapacity} beds free)
+              Free ({freePct}% Avail)
             </span>
           </div>
 
-          {/* Progress Bar */}
+          {/* Occupancy Progress Bar */}
           <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden mt-0.5">
             <div 
-              className="bg-emerald-500 h-full rounded-full transition-all duration-300"
-              style={{ width: `${Math.min(100, (totalLoad / (totalCapacity || 1)) * 100)}%` }}
+              className={`h-full rounded-full transition-all duration-300 ${
+                occupancyPct > 90 ? "bg-red-500" : occupancyPct > 70 ? "bg-amber-500" : "bg-emerald-500"
+              }`}
+              style={{ width: `${Math.min(100, occupancyPct)}%` }}
             ></div>
           </div>
         </div>
@@ -159,7 +173,7 @@ export default function ExecutiveSummaryHeader({
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-red-600 dark:text-red-400 flex items-center gap-1">
               <AlertTriangle className="w-4 h-4 animate-pulse" />
-              <span>IMD Red Alert</span>
+              <span>IMD Weather Alert</span>
             </span>
             <div className="w-7 h-7 rounded-lg bg-red-500/15 flex items-center justify-center text-red-600 dark:text-red-400">
               <CloudRain className="w-4 h-4" />
@@ -175,7 +189,7 @@ export default function ExecutiveSummaryHeader({
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-xs text-theme-secondary pt-1.5 border-t border-theme-border">
+          <div className="flex items-center justify-between text-xs text-theme-secondary pt-1.5 border-t border-theme-border font-mono">
             <span>Tide: <strong className="text-theme-primary">{sensors.tideHeight}m</strong></span>
             <span>Gusts: <strong className="text-amber-600 dark:text-amber-400">{sensors.windGust} km/h</strong></span>
           </div>
@@ -188,7 +202,7 @@ export default function ExecutiveSummaryHeader({
         {/* Left: Disaster Type Filters */}
         <div className="flex items-center space-x-1.5 overflow-x-auto max-w-full pb-0.5">
           {[
-            { id: "all", label: "All Incidents", count: totalReports - resolvedCount },
+            { id: "all", label: "All Incidents", count: activeReportsCount },
             { id: "critical", label: "🔥 Critical", count: criticalCount },
             { id: "flood", label: "🌊 Flood", count: floodCount },
             { id: "medical", label: "🚑 Medical", count: medicalCount },
