@@ -145,12 +145,12 @@ export default function CitizenPortal({
       </div>
 
       {/* 2. Navigation Tabs */}
-      <div className="flex items-center space-x-1.5 bg-theme-subtle p-1 rounded-xl border border-theme-border text-xs font-bold transition-colors duration-200">
+      <div className="flex items-center space-x-1 sm:space-x-1.5 bg-theme-subtle p-1 rounded-xl border border-theme-border text-[11px] sm:text-xs font-bold transition-colors duration-200 overflow-x-auto">
         {[
-          { id: "alerts", label: lang === "hi" ? "📢 लाइव अलर्ट" : lang === "mr" ? "📢 थेट इशारे" : `📢 Alerts (${broadcastAlerts.length})`, icon: Radio },
-          { id: "report", label: lang === "hi" ? "🚨 आपातकालीन SOS" : lang === "mr" ? "🚨 आणीबाणी SOS" : "🚨 Report SOS", icon: Send },
-          { id: "shelters", label: lang === "hi" ? "🏛️ राहत शिविर" : lang === "mr" ? "🏛️ निवारा छावण्या" : `🏛️ Shelters (${SHELTERS.length})`, icon: Building },
-          { id: "contacts", label: lang === "hi" ? "📞 हेल्पलाइन" : lang === "mr" ? "📞 मदत क्रमांक" : "📞 Helplines", icon: Phone }
+          { id: "alerts", label: lang === "hi" ? "📢 अलर्ट" : lang === "mr" ? "📢 इशारे" : `📢 Alerts (${broadcastAlerts.length})`, icon: Radio },
+          { id: "report", label: lang === "hi" ? "🚨 SOS" : lang === "mr" ? "🚨 SOS" : "🚨 Report SOS", icon: Send },
+          { id: "shelters", label: lang === "hi" ? "🏛️ राहत शिविर" : lang === "mr" ? "🏛️ निवारा" : `🏛️ Shelters (${SHELTERS.length})`, icon: Building },
+          { id: "contacts", label: lang === "hi" ? "📞 हेल्पलाइन" : lang === "mr" ? "📞 मदत" : "📞 Helplines", icon: Phone }
         ].map(tab => (
           <button
             key={tab.id}
@@ -158,7 +158,7 @@ export default function CitizenPortal({
               soundEngine.playUiClick();
               setActiveTab(tab.id);
             }}
-            className={`flex-1 flex items-center justify-center space-x-1.5 py-2 rounded-lg transition-all ${
+            className={`flex-1 min-w-0 flex items-center justify-center space-x-1 py-2 px-1 sm:px-2 rounded-lg transition-all whitespace-nowrap cursor-pointer ${
               activeTab === tab.id
                 ? "bg-red-600 text-white shadow-sm font-bold"
                 : "text-theme-secondary hover:text-theme-primary"
