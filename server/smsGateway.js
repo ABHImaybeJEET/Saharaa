@@ -41,15 +41,15 @@ export function parseIncomingSms(rawText, senderPhone = "+91 99000 00000") {
 
   // 1. Detect Category
   let category = "flood";
-  if (/medical|stroke|heart|patient|doctor|ambulance|oxygen|injured|bleeding/i.test(text)) {
+  if (/medical|stroke|heart|patient|doctor|ambulance|oxygen|injured|bleeding|hospital/i.test(text)) {
     category = "medical";
-  } else if (/trapped|stuck|stranded|collapsed|roof|tree/i.test(text)) {
+  } else if (/trapped|stuck|stranded|collapsed|roof|tree|balcony|basement/i.test(text)) {
     category = "trapped";
-  } else if (/shelter|homeless|evacuat|roof blown|no place/i.test(text)) {
+  } else if (/shelter|homeless|evacuat|roof blown|no place|displaced/i.test(text)) {
     category = "shelterless";
-  } else if (/food|ration|water|starving|milk/i.test(text)) {
+  } else if (/food|ration|water|starving|milk|drinking water/i.test(text)) {
     category = "food_water";
-  } else if (/landslide|mudslide|hill/i.test(text)) {
+  } else if (/landslide|mudslide|hill|rockfall/i.test(text)) {
     category = "landslide";
   }
 
@@ -104,12 +104,17 @@ export function parseIncomingSms(rawText, senderPhone = "+91 99000 00000") {
   const phoneMatch = text.match(/(\+?91[\s-]?)?[6-9]\d{9}/);
   const detectedPhone = phoneMatch ? phoneMatch[0] : senderPhone;
 
-  // Clean description
-  const cleanDescription = text
-    .replace(/^FLOOD\s+/i, "")
-    .replace(/\b[1-9][0-9]{5}\b/, "")
-    .replace(/\b(CRITICAL|HIGH|MEDIUM|LOW)\b/gi, "")
-    .trim();
+  // Clean description - strip prefixes, pincode, severities, and phone numbers cleanly
+  let cleanDescription = text
+    .replace(/^(FLOOD|MEDICAL|TRAPPED|SHELTER|SHELTERLESS|FOOD|WATER|LANDSLIDE|SOS|EMERGENCY)\s+/gi, "")
+    .replace(/\b[1-9][0-9]{5}\b/g, "")
+    .replace(/\b(CRITICAL|HIGH|MEDIUM|LOW)\b/gi, "");
+
+  if (phoneMatch) {
+    cleanDescription = cleanDescription.replace(phoneMatch[0], "");
+  }
+
+  cleanDescription = cleanDescription.replace(/\s+/g, " ").trim();
 
   return {
     id: `sms-rep-${Date.now()}`,
@@ -127,3 +132,4 @@ export function parseIncomingSms(rawText, senderPhone = "+91 99000 00000") {
     raw_sms: text
   };
 }
+

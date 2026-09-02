@@ -4,13 +4,22 @@
  * Calculates Haversine distance between two lat/lng points in kilometers.
  */
 export function calculateHaversineDistanceKm(lat1, lon1, lat2, lon2) {
+  const pLat1 = Number(lat1);
+  const pLon1 = Number(lon1);
+  const pLat2 = Number(lat2);
+  const pLon2 = Number(lon2);
+
+  if (isNaN(pLat1) || isNaN(pLon1) || isNaN(pLat2) || isNaN(pLon2)) {
+    return 9999;
+  }
+
   const R = 6371; // Radius of the Earth in km
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const dLat = (pLat2 - pLat1) * (Math.PI / 180);
+  const dLon = (pLon2 - pLon1) * (Math.PI / 180);
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) *
-    Math.cos(lat2 * (Math.PI / 180)) *
+    Math.cos(pLat1 * (Math.PI / 180)) *
+    Math.cos(pLat2 * (Math.PI / 180)) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return parseFloat((R * c).toFixed(2));
@@ -39,11 +48,27 @@ export const CATEGORY_RESOURCE_PRIORITY = {
  * 5. Maximum operational radius constraint (default 25 km).
  */
 export function matchReportToResource(report, resources, maxRadiusKm = 25) {
+  if (!report || isNaN(Number(report.lat)) || isNaN(Number(report.lng))) {
+    return {
+      matched: false,
+      reason: "Invalid coordinates provided for incident report",
+      escalate: true
+    };
+  }
+
+  if (!Array.isArray(resources) || resources.length === 0) {
+    return {
+      matched: false,
+      reason: "No disaster response resources registered in the grid",
+      escalate: true
+    };
+  }
+
   const preferredTypes = CATEGORY_RESOURCE_PRIORITY[report.category] || ["rescue_team", "shelter", "supply_stock"];
 
   // Filter candidates: has capacity and status is available/en_route
   const eligibleResources = resources.filter(res => {
-    const hasCapacity = res.current_load < res.capacity;
+    const hasCapacity = (Number(res.current_load) || 0) < (Number(res.capacity) || 1);
     const isReady = res.status === "available" || res.status === "en_route";
     const matchesType = preferredTypes.includes(res.type);
     return hasCapacity && isReady && matchesType;
@@ -61,7 +86,6 @@ export function matchReportToResource(report, resources, maxRadiusKm = 25) {
   const scored = eligibleResources.map(res => {
     const distanceKm = calculateHaversineDistanceKm(report.lat, report.lng, res.lat, res.lng);
     const typePriorityIndex = preferredTypes.indexOf(res.type);
-    // Prefer higher priority type; if tied, sort by distance
     return {
       resource: res,
       distanceKm,
@@ -74,9 +98,10 @@ export function matchReportToResource(report, resources, maxRadiusKm = 25) {
   const withinRadius = scored.filter(item => item.distanceKm <= maxRadiusKm);
 
   if (withinRadius.length === 0) {
+    const minDistance = Math.min(...scored.map(s => s.distanceKm));
     return {
       matched: false,
-      reason: `Closest available resource is beyond operational threshold (${scored[0]?.distanceKm} km > ${maxRadiusKm} km)`,
+      reason: `Closest available resource is beyond operational threshold (${minDistance} km > ${maxRadiusKm} km)`,
       escalate: true
     };
   }
@@ -99,3 +124,4 @@ export function matchReportToResource(report, resources, maxRadiusKm = 25) {
     assignedAt: new Date().toISOString()
   };
 }
+

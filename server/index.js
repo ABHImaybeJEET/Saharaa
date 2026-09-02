@@ -90,23 +90,26 @@ app.get("/api/state", (req, res) => {
 app.post("/api/reports", (req, res) => {
   const { category, severity, lat, lng, description, photo_url, phone, location_name } = req.body;
 
-  if (!lat || !lng) {
-    return res.status(400).json({ error: "Latitude and longitude coordinates are required." });
+  const parsedLat = parseFloat(lat);
+  const parsedLng = parseFloat(lng);
+
+  if (isNaN(parsedLat) || isNaN(parsedLng) || parsedLat < -90 || parsedLat > 90 || parsedLng < -180 || parsedLng > 180) {
+    return res.status(400).json({ error: "Valid latitude (-90 to 90) and longitude (-180 to 180) coordinates are required." });
   }
 
   const newReport = {
     id: `rep-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
     category: category || "flood",
     severity: severity || "medium",
-    lat: parseFloat(lat),
-    lng: parseFloat(lng),
+    lat: parsedLat,
+    lng: parsedLng,
     description: description || "Disaster assistance requested",
     photo_url: photo_url || null,
     timestamp: new Date().toISOString(),
     status: "new",
     phone: phone || "+91 99000 00000",
     source: "web",
-    location_name: location_name || `Coordinate (${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)})`
+    location_name: location_name || `Coordinate (${parsedLat.toFixed(4)}, ${parsedLng.toFixed(4)})`
   };
 
   store.addReport(newReport);
@@ -196,20 +199,19 @@ app.post("/api/allocations/override", (req, res) => {
   const { report_id, resource_id, notes } = req.body;
 
   const report = store.reports.find(r => r.id === report_id);
-  const newResource = store.resources.find(r => r.id === resource_id);
+  const targetResource = store.resources.find(r => r.id === resource_id);
 
-  if (!report || !newResource) {
+  if (!report || !targetResource) {
     return res.status(404).json({ error: "Report or Resource not found" });
   }
 
   // 1. Check if there was an existing active allocation for this report
-  const existingAllocIdx = store.allocations.findIndex(a => a.report_id === report_id && a.status === "active");
-  if (existingAllocIdx !== -1) {
-    const prevAlloc = store.allocations[existingAllocIdx];
-    store.updateAllocation(prevAlloc.id, { status: "overridden" });
-    
-    // Decrement previous resource load
-    const prevRes = store.resources.find(r => r.id === prevAlloc.resource_id);
+  const existingAlloc = store.allocations.find(a => a.report_id === report_id && a.status === "active");
+  
+  // If reassigning to a DIFFERENT resource, adjust previous resource load
+  if (existingAlloc && existingAlloc.resource_id !== resource_id) {
+    store.updateAllocation(existingAlloc.id, { status: "overridden" });
+    const prevRes = store.resources.find(r => r.id === existingAlloc.resource_id);
     if (prevRes && prevRes.current_load > 0) {
       const updatedLoad = prevRes.current_load - 1;
       store.updateResource(prevRes.id, {
@@ -217,24 +219,33 @@ app.post("/api/allocations/override", (req, res) => {
         status: updatedLoad >= prevRes.capacity ? "full" : "available"
       });
     }
+
+    // Increment new resource load
+    const freshTargetRes = store.resources.find(r => r.id === resource_id);
+    const newLoad = freshTargetRes.current_load + 1;
+    store.updateResource(freshTargetRes.id, {
+      current_load: newLoad,
+      status: newLoad >= freshTargetRes.capacity ? "full" : "available"
+    });
+  } else if (!existingAlloc) {
+    // Increment target resource load if new allocation
+    const freshTargetRes = store.resources.find(r => r.id === resource_id);
+    const newLoad = freshTargetRes.current_load + 1;
+    store.updateResource(freshTargetRes.id, {
+      current_load: newLoad,
+      status: newLoad >= freshTargetRes.capacity ? "full" : "available"
+    });
   }
 
-  // 2. Increment new resource load
-  const newLoad = newResource.current_load + 1;
-  store.updateResource(newResource.id, {
-    current_load: newLoad,
-    status: newLoad >= newResource.capacity ? "full" : "available"
-  });
-
   // 3. Compute distance
-  const distanceKm = calculateHaversineDistanceKm(report.lat, report.lng, newResource.lat, newResource.lng);
+  const distanceKm = calculateHaversineDistanceKm(report.lat, report.lng, targetResource.lat, targetResource.lng);
   const etaMinutes = Math.max(3, Math.round(distanceKm * 4 + 3));
 
   // 4. Create new allocation
   const newAlloc = {
     id: `alloc-${Date.now()}-override`,
     report_id: report.id,
-    resource_id: newResource.id,
+    resource_id: targetResource.id,
     distance_km: distanceKm,
     eta_minutes: etaMinutes,
     assigned_at: new Date().toISOString(),
@@ -248,7 +259,7 @@ app.post("/api/allocations/override", (req, res) => {
   store.updateReport(report.id, { status: "resource_assigned" });
 
   store.addAuditLog(
-    `[DISPATCHED] Authority assigned ${newResource.name} to Incident #${report.id.slice(-6)} (${distanceKm} km away, ETA ${etaMinutes}m). Notes: ${notes || 'Priority dispatch'}`,
+    `[DISPATCHED] Authority assigned ${targetResource.name} to Incident #${report.id.slice(-6)} (${distanceKm} km away, ETA ${etaMinutes}m). Notes: ${notes || 'Priority dispatch'}`,
     "override"
   );
 
@@ -273,6 +284,11 @@ app.post("/api/reports/:id/resolve", (req, res) => {
 
   if (!report) {
     return res.status(404).json({ error: "Report not found" });
+  }
+
+  // If already resolved, return existing state
+  if (report.status === "resolved") {
+    return res.json({ success: true, message: "Report was already resolved", data: store.getState() });
   }
 
   store.updateReport(id, { status: "resolved", resolved_at: new Date().toISOString() });
@@ -305,17 +321,21 @@ app.post("/api/reports/:id/resolve", (req, res) => {
 // Add New Resource dynamically
 app.post("/api/resources", (req, res) => {
   const { name, type, lat, lng, capacity, contact_info, equipment } = req.body;
-  if (!name || !lat || !lng || !capacity) {
-    return res.status(400).json({ error: "Name, lat, lng, and capacity are required" });
+  const parsedLat = parseFloat(lat);
+  const parsedLng = parseFloat(lng);
+  const parsedCap = parseInt(capacity, 10);
+
+  if (!name || isNaN(parsedLat) || isNaN(parsedLng) || isNaN(parsedCap) || parsedCap <= 0) {
+    return res.status(400).json({ error: "Valid name, latitude, longitude, and positive capacity integer are required." });
   }
 
   const newResource = {
     id: `res-${Date.now()}`,
     name,
     type: type || "rescue_team",
-    lat: parseFloat(lat),
-    lng: parseFloat(lng),
-    capacity: parseInt(capacity, 10),
+    lat: parsedLat,
+    lng: parsedLng,
+    capacity: parsedCap,
     current_load: 0,
     status: "available",
     contact_info: contact_info || "HQ Command",
