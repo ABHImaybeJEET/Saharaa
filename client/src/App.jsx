@@ -204,7 +204,7 @@ export default function App() {
       />
 
       {/* 2. Main Body: Overview Landing vs Authority Command vs Citizen Portal */}
-      <main className="flex-1 p-2 sm:p-3 md:p-4 max-w-[1700px] w-full mx-auto flex flex-col">
+      <main className="flex-1 p-2 sm:p-3 md:p-4 max-w-[1700px] w-full mx-auto flex flex-col pb-20 sm:pb-4">
         {currentMode === "landing" ? (
           <LandingPage
             reports={reports}
@@ -256,9 +256,89 @@ export default function App() {
         )}
       </main>
 
+      {/* Mobile Sticky Bottom Navigation Dock (Thumb-friendly on phones) */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-[999] bg-theme-card/95 border-t border-theme-border backdrop-blur-xl px-2 py-1.5 flex items-center justify-around shadow-2xl">
+        <button
+          onClick={() => {
+            soundEngine.playUiClick();
+            setCurrentMode("landing");
+          }}
+          className={`flex flex-col items-center py-1 px-2.5 rounded-xl transition-all ${
+            currentMode === "landing"
+              ? "text-red-600 dark:text-red-400 font-extrabold"
+              : "text-theme-muted hover:text-theme-primary"
+          }`}
+        >
+          <div className={`p-1 rounded-lg ${currentMode === "landing" ? "bg-red-500/15" : ""}`}>
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <span className="text-[10px] mt-0.5">Overview</span>
+        </button>
+
+        <button
+          onClick={() => {
+            soundEngine.playUiClick();
+            setCurrentMode("authority");
+          }}
+          className={`flex flex-col items-center py-1 px-2.5 rounded-xl transition-all ${
+            currentMode === "authority"
+              ? "text-red-600 dark:text-red-400 font-extrabold"
+              : "text-theme-muted hover:text-theme-primary"
+          }`}
+        >
+          <div className={`p-1 rounded-lg ${currentMode === "authority" ? "bg-red-500/15" : ""}`}>
+            <Map className="w-4 h-4" />
+          </div>
+          <span className="text-[10px] mt-0.5">Authority</span>
+        </button>
+
+        <button
+          onClick={() => {
+            soundEngine.playUiClick();
+            setCurrentMode("citizen");
+          }}
+          className={`flex flex-col items-center py-1 px-2.5 rounded-xl transition-all ${
+            currentMode === "citizen"
+              ? "text-red-600 dark:text-red-400 font-extrabold"
+              : "text-theme-muted hover:text-theme-primary"
+          }`}
+        >
+          <div className={`p-1 rounded-lg ${currentMode === "citizen" ? "bg-red-500/15" : ""}`}>
+            <Users className="w-4 h-4" />
+          </div>
+          <span className="text-[10px] mt-0.5">Citizen</span>
+        </button>
+
+        <button
+          onClick={() => {
+            soundEngine.playUiClick();
+            setIsSmsModalOpen(true);
+          }}
+          className="flex flex-col items-center py-1 px-2.5 rounded-xl text-purple-600 dark:text-purple-400 transition-all"
+        >
+          <div className="p-1 rounded-lg bg-purple-500/15">
+            <Radio className="w-4 h-4" />
+          </div>
+          <span className="text-[10px] mt-0.5 font-mono">SMS SOS</span>
+        </button>
+
+        <button
+          onClick={() => {
+            soundEngine.playUiClick();
+            setIsBroadcastModalOpen(true);
+          }}
+          className="flex flex-col items-center py-1 px-2.5 rounded-xl text-amber-600 dark:text-amber-400 transition-all"
+        >
+          <div className="p-1 rounded-lg bg-amber-500/15">
+            <AlertTriangle className="w-4 h-4" />
+          </div>
+          <span className="text-[10px] mt-0.5">Broadcast</span>
+        </button>
+      </nav>
+
       {/* 3. Toast Notifications */}
       {toast && (
-        <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:right-5 z-[10000] animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-20 sm:bottom-4 right-4 left-4 sm:left-auto sm:right-5 z-[10000] animate-in slide-in-from-bottom-5 duration-300">
           <div className={`p-3.5 rounded-2xl shadow-2xl border flex items-start space-x-3 max-w-sm backdrop-blur-xl ${
             toast.type === "alert" ? "bg-red-950/95 border-red-500 text-red-100 shadow-red-500/20" :
             toast.type === "match" ? "bg-cyan-950/95 border-cyan-500 text-cyan-100 shadow-cyan-500/20" :

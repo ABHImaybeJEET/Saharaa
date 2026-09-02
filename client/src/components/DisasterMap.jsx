@@ -396,15 +396,15 @@ export default function DisasterMap({
   const activeTileConfig = TILE_LAYERS[tileLayerKey] || TILE_LAYERS.street;
 
   return (
-    <div className="relative isolate z-0 w-full h-[360px] sm:h-[420px] lg:h-[480px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm bg-slate-100 dark:bg-slate-950 flex flex-col shrink-0 font-sans">
+    <div className="relative isolate z-0 w-full h-[340px] sm:h-[420px] lg:h-[500px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm bg-slate-100 dark:bg-slate-950 flex flex-col shrink-0 font-sans">
       
       {/* Top Floating Controls Bar */}
-      <div className="absolute top-3 left-3 right-3 z-[400] flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+      <div className="absolute top-2 left-2 right-2 z-[400] flex items-center justify-between gap-1.5 pointer-events-none">
         
         {/* Left: Quick View Filter Chips */}
-        <div className="pointer-events-auto flex items-center space-x-1 p-1 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 text-xs shadow-md max-w-full overflow-x-auto">
+        <div className="pointer-events-auto flex items-center space-x-1 p-0.5 sm:p-1 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 text-xs shadow-md max-w-[62%] sm:max-w-full overflow-x-auto">
           {[
-            { id: "all", label: "All Grid" },
+            { id: "all", label: "All" },
             { id: "incidents", label: "🚨 Incidents" },
             { id: "rescue", label: "🚤 Boats" },
             { id: "shelters", label: "🏛️ Shelters" }
@@ -415,7 +415,7 @@ export default function DisasterMap({
                 soundEngine.playUiClick();
                 setFilterMode(tab.id);
               }}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all whitespace-nowrap ${
+              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filterMode === tab.id
                   ? "bg-red-600 text-white shadow-sm"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -427,13 +427,13 @@ export default function DisasterMap({
         </div>
 
         {/* Right: Map Base Switcher & Recenter Controls */}
-        <div className="pointer-events-auto flex items-center space-x-1.5 p-1 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-md text-xs">
+        <div className="pointer-events-auto flex items-center space-x-1 p-0.5 sm:p-1 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-md text-xs">
           
           {/* Tile Layer Selector */}
-          <div className="flex items-center space-x-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+          <div className="flex items-center space-x-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] sm:text-xs font-semibold">
             {[
               { key: "street", label: "Street" },
-              { key: "satellite", label: "Satellite" },
+              { key: "satellite", label: "Sat" },
               { key: "dark", label: "Dark" }
             ].map(l => (
               <button
@@ -442,7 +442,7 @@ export default function DisasterMap({
                   soundEngine.playUiClick();
                   setTileLayerKey(l.key);
                 }}
-                className={`px-2.5 py-1 rounded transition-all whitespace-nowrap ${
+                className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded transition-all whitespace-nowrap cursor-pointer ${
                   tileLayerKey === l.key
                     ? "bg-cyan-600 text-white font-bold shadow-sm"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -456,11 +456,11 @@ export default function DisasterMap({
           {/* Recenter Button */}
           <button
             onClick={handleRecenter}
-            className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all text-xs flex items-center gap-1.5 font-semibold border border-slate-200 dark:border-slate-700"
+            className="p-1 sm:px-2.5 sm:py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all text-xs flex items-center gap-1 font-semibold border border-slate-200 dark:border-slate-700 cursor-pointer"
             title="Recenter Grid Coordinates"
           >
             <Crosshair className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-            <span className="hidden sm:inline">Recenter</span>
+            <span className="hidden md:inline">Recenter</span>
           </button>
         </div>
       </div>

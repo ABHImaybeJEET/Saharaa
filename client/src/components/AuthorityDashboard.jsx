@@ -104,6 +104,8 @@ export default function AuthorityDashboard({
     ? resources.find(r => r.id === currentAllocation.resource_id) 
     : null;
 
+  const [mobileTab, setMobileTab] = useState("map"); // "map" | "triage"
+
   const recommendations = selectedReport ? getResourceRecommendations(selectedReport) : [];
   const topRecommended = recommendations.length > 0 ? recommendations[0] : null;
 
@@ -145,11 +147,46 @@ export default function AuthorityDashboard({
         translations={translations}
       />
 
-      {/* 2. Main Authority Layout: Centerpiece Map on Top for Mobile, 2-Col for Desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-[550px]">
+      {/* Mobile/Tablet Sub-Tab Switcher (Visible only on < lg screens) */}
+      <div className="flex lg:hidden items-center bg-theme-subtle p-1 rounded-xl border border-theme-border text-xs font-bold w-full">
+        <button
+          onClick={() => {
+            soundEngine.playUiClick();
+            setMobileTab("map");
+          }}
+          className={`flex-1 flex items-center justify-center space-x-1.5 py-2 rounded-lg transition-all ${
+            mobileTab === "map"
+              ? "bg-red-600 text-white shadow-sm font-bold"
+              : "text-theme-secondary hover:text-theme-primary"
+          }`}
+        >
+          <Map className="w-3.5 h-3.5" />
+          <span>Tactical Map</span>
+        </button>
+
+        <button
+          onClick={() => {
+            soundEngine.playUiClick();
+            setMobileTab("triage");
+          }}
+          className={`flex-1 flex items-center justify-center space-x-1.5 py-2 rounded-lg transition-all ${
+            mobileTab === "triage"
+              ? "bg-red-600 text-white shadow-sm font-bold"
+              : "text-theme-secondary hover:text-theme-primary"
+          }`}
+        >
+          <Flame className="w-3.5 h-3.5 text-orange-400" />
+          <span>Triage Queue ({filteredReports.length})</span>
+        </button>
+      </div>
+
+      {/* 2. Main Authority Layout: Unified Split on Desktop, Tabbed on Mobile */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-[500px]">
         
-        {/* Centerpiece Map + Direct Incident Dispatch Drawer (Desktop: Right 8 cols, Mobile: Top) */}
-        <div className="order-1 lg:order-2 lg:col-span-8 flex flex-col space-y-3 min-w-0">
+        {/* Centerpiece Map + Direct Incident Dispatch Drawer */}
+        <div className={`lg:col-span-8 flex flex-col space-y-3 min-w-0 ${
+          mobileTab === "map" ? "flex" : "hidden lg:flex"
+        }`}>
           
           {/* Interactive Map (Centerpiece) */}
           <div className="relative w-full">
@@ -296,8 +333,10 @@ export default function AuthorityDashboard({
           )}
         </div>
 
-        {/* Left Column: Live Incident Triage Stream (Desktop: Left 4 cols, Mobile: Below Map) */}
-        <div className="order-2 lg:order-1 lg:col-span-4 flex flex-col bg-theme-card border border-theme-border rounded-2xl overflow-hidden shadow-sm transition-colors">
+        {/* Incident Triage Column */}
+        <div className={`lg:col-span-4 flex flex-col bg-theme-card border border-theme-border rounded-2xl overflow-hidden shadow-sm transition-colors ${
+          mobileTab === "triage" ? "flex" : "hidden lg:flex"
+        }`}>
           
           {/* Header & Search Bar */}
           <div className="p-3.5 border-b border-theme-border flex items-center justify-between">
