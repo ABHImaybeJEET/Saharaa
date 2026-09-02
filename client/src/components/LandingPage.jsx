@@ -31,7 +31,12 @@ import {
   Layers,
   BarChart3,
   TrendingUp,
-  Cpu
+  Cpu,
+  Target,
+  Truck,
+  HeartPulse,
+  Award,
+  Globe
 } from "lucide-react";
 import { soundEngine } from "../utils/soundEffects";
 import { triggerScenarioStep } from "../utils/api";
@@ -62,7 +67,8 @@ export default function LandingPage({
     rainfall: 154,
     windGust: 82,
     tideHeight: 4.85,
-    floodRiskIndex: 88
+    floodRiskIndex: 88,
+    estimatedProtected: 1420
   });
 
   useEffect(() => {
@@ -75,7 +81,8 @@ export default function LandingPage({
         rainfall: Math.max(130, Math.min(190, prev.rainfall + (Math.floor(Math.random() * 5) - 2))),
         windGust: Math.max(70, Math.min(105, prev.windGust + (Math.floor(Math.random() * 5) - 2))),
         tideHeight: parseFloat((4.80 + Math.sin(Date.now() / 30000) * 0.12).toFixed(2)),
-        floodRiskIndex: Math.max(80, Math.min(96, prev.floodRiskIndex + (Math.floor(Math.random() * 3) - 1)))
+        floodRiskIndex: Math.max(80, Math.min(96, prev.floodRiskIndex + (Math.floor(Math.random() * 3) - 1))),
+        estimatedProtected: prev.estimatedProtected + (Math.random() > 0.6 ? 2 : 0)
       }));
     }, 4000);
 
@@ -100,13 +107,18 @@ export default function LandingPage({
   const occupancyPct = totalCapacity > 0 ? Math.round((totalLoad / totalCapacity) * 100) : 0;
   const matchRatePct = totalReports > 0 ? Math.round((allocations.length / totalReports) * 100) : 100;
 
-  const filteredIncidents = activeReports.filter(r => {
-    if (selectedIncidentFilter === "critical") return r.severity === "critical";
-    if (selectedIncidentFilter === "high") return r.severity === "high";
-    if (selectedIncidentFilter === "flood") return r.category === "flood";
-    if (selectedIncidentFilter === "medical") return r.category === "medical";
-    return true;
-  });
+  const rescueTeams = resources.filter(r => r.type === "rescue_team");
+  const shelters = resources.filter(r => r.type === "shelter");
+  const supplyHubs = resources.filter(r => r.type === "supply_stock");
+
+  // Zone Risk Status
+  const ZONES = [
+    { name: "Zone 1: Kurla Mithi Basin", risk: "CRITICAL FLOOD", level: "critical", waterLevel: "5.2 ft", status: "Sluice gates active" },
+    { name: "Zone 2: Bandra - BKC Corridor", risk: "HIGH INUNDATION", level: "high", waterLevel: "3.8 ft", status: "Drainage pumps running" },
+    { name: "Zone 3: Milan Subway & Santacruz", risk: "SUBWAY SUBMERGED", level: "critical", waterLevel: "6.0 ft", status: "Traffic diverted" },
+    { name: "Zone 4: Andheri East MIDC", risk: "GALE DAMAGE", level: "medium", waterLevel: "2.1 ft", status: "Shelter camp active" },
+    { name: "Zone 5: Thane Creek Coastal Belt", risk: "HIGH TIDE SURGE", level: "high", waterLevel: "4.8 ft", status: "Coastal alert" }
+  ];
 
   const handleRunDrill = async (stepNum) => {
     setDrillExecuting(stepNum);
@@ -124,11 +136,12 @@ export default function LandingPage({
   return (
     <div className="w-full max-w-[1700px] mx-auto space-y-4 font-sans animate-in fade-in duration-200">
       
-      {/* 1. TOP MISSION CONTROL HEADER HUD */}
-      <div className="w-full bg-theme-card border border-theme-border rounded-2xl p-3.5 sm:p-5 shadow-sm space-y-3.5">
+      {/* 1. TOP STRATEGIC MISSION CONTROL HUD */}
+      <div className="w-full bg-theme-card border border-theme-border rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+        
+        {/* Row 1: Brand, Live Indicators & Navigation Jump Links */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-theme-border">
           
-          {/* Left Title & Status */}
           <div className="flex items-center space-x-3">
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-red-600 via-rose-600 to-amber-600 flex items-center justify-center text-white font-black shadow-lg shadow-red-600/30 shrink-0">
               <ShieldAlert className="w-6 h-6" />
@@ -136,7 +149,7 @@ export default function LandingPage({
             <div>
               <div className="flex items-center space-x-2.5 flex-wrap">
                 <h1 className="text-base sm:text-lg font-black text-theme-primary tracking-tight font-sans">
-                  SAHARAA CRISIS OPERATIONS DASHBOARD
+                  SAHARAA STRATEGIC COMMAND & IMPACT OVERVIEW
                 </h1>
                 <span className="px-2 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 font-mono text-[10px] font-extrabold border border-red-500/30 flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
@@ -147,14 +160,14 @@ export default function LandingPage({
                 </span>
               </div>
               <p className="text-xs text-theme-muted mt-0.5 flex items-center gap-2">
-                <span>Autonomous Spatial Allocation & Multi-Agency Humanitarian Grid</span>
+                <span>Multi-Agency Spatial Dispatch & Strategic Humanitarian Operations</span>
                 <span>•</span>
                 <span className="font-mono text-theme-secondary font-semibold">{currentTime} IST</span>
               </p>
             </div>
           </div>
 
-          {/* Right Fast Action Launchers */}
+          {/* Quick Launch Buttons */}
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             <button
               onClick={() => {
@@ -164,7 +177,7 @@ export default function LandingPage({
               className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs flex items-center space-x-1.5 shadow-md shadow-red-600/20 active:scale-95 transition-all cursor-pointer"
             >
               <Map className="w-3.5 h-3.5" />
-              <span>Tactical Map</span>
+              <span>Launch Tactical Map</span>
             </button>
 
             <button
@@ -175,7 +188,7 @@ export default function LandingPage({
               className="px-3.5 py-2 rounded-xl bg-theme-subtle hover:bg-slate-200 dark:hover:bg-slate-800 border border-theme-border text-theme-primary font-bold text-xs flex items-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
             >
               <LifeBuoy className="w-3.5 h-3.5 text-rose-500" />
-              <span>Citizen Portal</span>
+              <span>Citizen SOS Portal</span>
             </button>
 
             <button
@@ -213,66 +226,40 @@ export default function LandingPage({
           </div>
         </div>
 
-        {/* 2. 4 EXECUTIVE TELEMETRY GAUGES */}
+        {/* Row 2: 4 High-Impact Strategic Analytics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
           
-          {/* Meter 1: Incident Triage Status */}
+          {/* Card 1: Lives Protected & Evacuated */}
           <div className="p-3.5 rounded-xl bg-theme-subtle border border-theme-border flex flex-col justify-between space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-theme-muted font-mono">
-                Active Emergencies
+                Citizens Protected
               </span>
-              <div className="w-7 h-7 rounded-lg bg-red-500/15 text-red-600 dark:text-red-400 flex items-center justify-center font-bold">
-                <Flame className="w-4 h-4" />
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                <HeartPulse className="w-4 h-4" />
               </div>
             </div>
 
             <div className="flex items-baseline space-x-2">
-              <span className="text-2xl sm:text-3xl font-black text-red-600 dark:text-red-400 font-mono">
-                {activeReports.length}
+              <span className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                {telemetry.estimatedProtected.toLocaleString()}
               </span>
-              <span className="text-xs text-theme-muted">
-                / {totalReports} Total Logs
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+                + Evacuated
               </span>
             </div>
 
-            {/* Micro Breakdown Bar */}
-            <div className="space-y-1">
-              <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden flex">
-                <div 
-                  className="bg-red-600 h-full transition-all" 
-                  style={{ width: `${totalReports > 0 ? (criticalReports.length / totalReports) * 100 : 0}%` }}
-                  title="Critical"
-                ></div>
-                <div 
-                  className="bg-orange-500 h-full transition-all" 
-                  style={{ width: `${totalReports > 0 ? (highReports.length / totalReports) * 100 : 0}%` }}
-                  title="High"
-                ></div>
-                <div 
-                  className="bg-amber-500 h-full transition-all" 
-                  style={{ width: `${totalReports > 0 ? (mediumReports.length / totalReports) * 100 : 0}%` }}
-                  title="Medium"
-                ></div>
-                <div 
-                  className="bg-emerald-500 h-full transition-all" 
-                  style={{ width: `${totalReports > 0 ? (resolvedReports.length / totalReports) * 100 : 0}%` }}
-                  title="Resolved"
-                ></div>
-              </div>
-              <div className="flex justify-between text-[10px] font-mono text-theme-muted">
-                <span className="text-red-600 dark:text-red-400 font-bold">{criticalReports.length} Crit</span>
-                <span className="text-orange-600 dark:text-orange-400 font-bold">{highReports.length} High</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-bold">{resolvedReports.length} Done</span>
-              </div>
+            <div className="flex items-center justify-between text-xs text-theme-secondary font-mono pt-1 border-t border-theme-border">
+              <span>Coverage: <strong className="text-theme-primary">99.4%</strong></span>
+              <span>Zero-Data: <strong className="text-purple-600 dark:text-purple-400">GSM Active</strong></span>
             </div>
           </div>
 
-          {/* Meter 2: Sortie Dispatch & Spatial Engine */}
+          {/* Card 2: Spatial Match Latency & Sorties */}
           <div className="p-3.5 rounded-xl bg-theme-subtle border border-theme-border flex flex-col justify-between space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-theme-muted font-mono">
-                Sortie Auto-Match
+                Dispatch Latency
               </span>
               <div className="w-7 h-7 rounded-lg bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold">
                 <Zap className="w-4 h-4" />
@@ -281,32 +268,32 @@ export default function LandingPage({
 
             <div className="flex items-baseline space-x-2">
               <span className="text-2xl sm:text-3xl font-black text-cyan-600 dark:text-cyan-400 font-mono">
-                {activeAllocations.length}
+                0.04s
               </span>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold font-mono">
-                ● En Route ({matchRatePct}%)
+              <span className="text-xs text-cyan-600 dark:text-cyan-400 font-semibold font-mono">
+                Haversine Math
               </span>
             </div>
 
             <div className="flex items-center justify-between text-xs text-theme-secondary font-mono pt-1 border-t border-theme-border">
-              <span>Avg Haversine: <strong className="text-theme-primary">1.4 km</strong></span>
-              <span>ETA: <strong className="text-cyan-600 dark:text-cyan-400">~6m</strong></span>
+              <span>Sorties: <strong className="text-theme-primary">{activeAllocations.length} Active</strong></span>
+              <span>Avg ETA: <strong className="text-cyan-600 dark:text-cyan-400">~6m</strong></span>
             </div>
           </div>
 
-          {/* Meter 3: Shelter Headroom & Relief Capacity */}
+          {/* Card 3: Relief Camp Bed Availability */}
           <div className="p-3.5 rounded-xl bg-theme-subtle border border-theme-border flex flex-col justify-between space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-theme-muted font-mono">
-                Relief Capacity
+                Relief Headroom
               </span>
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
                 <Building className="w-4 h-4" />
               </div>
             </div>
 
             <div className="flex items-baseline space-x-2">
-              <span className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+              <span className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 font-mono">
                 {freeSlots}
               </span>
               <span className="text-xs text-theme-muted">
@@ -315,7 +302,7 @@ export default function LandingPage({
             </div>
 
             <div className="space-y-1">
-              <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
                 <div 
                   className={`h-full rounded-full transition-all ${
                     occupancyPct > 90 ? "bg-red-500" : occupancyPct > 70 ? "bg-amber-500" : "bg-emerald-500"
@@ -325,17 +312,17 @@ export default function LandingPage({
               </div>
               <div className="flex justify-between text-[10px] font-mono text-theme-muted">
                 <span>Load: {totalLoad}/{totalCapacity}</span>
-                <span>{resources.length} Units Active</span>
+                <span>{shelters.length} Shelters Verified</span>
               </div>
             </div>
           </div>
 
-          {/* Meter 4: Live Climate Sensor Telemetry */}
+          {/* Card 4: Environmental Flood Risk Index */}
           <div className="p-3.5 rounded-xl bg-theme-subtle border border-theme-border flex flex-col justify-between space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400 font-mono flex items-center gap-1">
                 <AlertTriangle className="w-3.5 h-3.5 animate-pulse" />
-                <span>IMD Sensor HUD</span>
+                <span>IMD Risk Index</span>
               </span>
               <div className="w-7 h-7 rounded-lg bg-red-500/15 text-red-600 dark:text-red-400 flex items-center justify-center font-bold">
                 <CloudRain className="w-4 h-4" />
@@ -347,7 +334,7 @@ export default function LandingPage({
                 Rain: <strong className="text-cyan-600 dark:text-cyan-400 font-mono">{telemetry.rainfall} mm/h</strong>
               </span>
               <span className="text-xs font-bold text-red-600 dark:text-red-400 font-mono">
-                Risk: {telemetry.floodRiskIndex}%
+                Hazard: {telemetry.floodRiskIndex}%
               </span>
             </div>
 
@@ -359,207 +346,113 @@ export default function LandingPage({
         </div>
       </div>
 
-      {/* 3. MAIN INTERACTIVE DASHBOARD SECTION (2 Columns: Live Incident Feed vs Resource Deployment Matrix) */}
+      {/* 2. OPERATIONAL IMPACT MATRIX & BASIN RISK ZONES (2 Columns) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         
-        {/* Left Column (7 cols): Live Incident Triage Stream */}
-        <div className="lg:col-span-7 bg-theme-card border border-theme-border rounded-2xl p-4 sm:p-5 shadow-sm space-y-3.5">
-          
-          {/* Header & Filter Pills */}
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <div className="flex items-center space-x-2">
-                <Flame className="w-4 h-4 text-red-600 dark:text-red-400" />
-                <h2 className="text-sm sm:text-base font-extrabold text-theme-primary">
-                  Live Incident Queue & Spatial Triage
-                </h2>
-              </div>
-              <p className="text-xs text-theme-muted mt-0.5">
-                Incoming citizen web & offline SMS reports mapped with automated dispatch recommendations
-              </p>
+        {/* Left Column (7 cols): Coastal Basin Risk Zones & Choke Points */}
+        <div className="lg:col-span-7 bg-theme-card border border-theme-border rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Waves className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+              <h2 className="text-sm sm:text-base font-extrabold text-theme-primary">
+                Metro Basin Inundation Zones & Critical Choke Points
+              </h2>
             </div>
+            <span className="text-[10px] font-mono font-bold text-theme-muted uppercase">
+              Real-Time Hydrotelemetry
+            </span>
+          </div>
 
-            {/* Filter Buttons */}
-            <div className="flex items-center space-x-1 bg-theme-subtle p-0.5 rounded-xl border border-theme-border text-xs">
-              {[
-                { id: "all", label: "All" },
-                { id: "critical", label: "🔥 Crit" },
-                { id: "high", label: "⚡ High" },
-                { id: "flood", label: "🌊 Flood" },
-                { id: "medical", label: "🚑 Med" }
-              ].map(tab => (
+          <div className="space-y-2">
+            {ZONES.map((zone, idx) => (
+              <div 
+                key={idx}
+                className="p-3 rounded-xl bg-theme-subtle border border-theme-border hover:border-theme-medium transition-all flex items-center justify-between gap-3 text-xs"
+              >
+                <div className="space-y-0.5 min-w-0">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-theme-primary truncate">
+                      {zone.name}
+                    </span>
+                    <span className={`px-2 py-0.2 rounded font-mono font-black text-[9px] uppercase ${
+                      zone.level === "critical" ? "bg-red-600 text-white" :
+                      zone.level === "high" ? "bg-orange-600 text-white" : "bg-amber-600 text-white"
+                    }`}>
+                      {zone.risk}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-theme-muted font-mono">
+                    Water Level: <strong className="text-theme-primary">{zone.waterLevel}</strong> • {zone.status}
+                  </div>
+                </div>
+
                 <button
-                  key={tab.id}
                   onClick={() => {
                     soundEngine.playUiClick();
-                    setSelectedIncidentFilter(tab.id);
+                    onSelectMode("authority");
                   }}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
-                    selectedIncidentFilter === tab.id
-                      ? "bg-red-600 text-white shadow-sm"
-                      : "text-theme-muted hover:text-theme-primary"
-                  }`}
+                  className="px-2.5 py-1 rounded-lg bg-theme-card border border-theme-border hover:border-red-500 text-theme-primary text-[11px] font-bold flex items-center gap-1 shrink-0 cursor-pointer"
                 >
-                  {tab.label}
+                  <span>Focus Map</span>
+                  <ChevronRight className="w-3 h-3" />
                 </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Column (5 cols): Multi-Agency Resource Readiness Radar */}
+        <div className="lg:col-span-5 space-y-4">
+          
+          {/* Agency Matrix */}
+          <div className="bg-theme-card border border-theme-border rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Target className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="text-sm sm:text-base font-extrabold text-theme-primary">
+                  Multi-Agency Deployment Strength
+                </h2>
+              </div>
+              <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                100% OPERATIONAL
+              </span>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              {[
+                { agency: "NDRF 5th Battalion", type: "Inflatable Zodiac Boats & High-Water Gear", units: "3 Boats", load: "18 / 40", color: "bg-red-500" },
+                { agency: "SDRF Evacuation Unit", type: "Rigid Hull Boats & Drone Recon", units: "2 Boats", load: "10 / 25", color: "bg-cyan-500" },
+                { agency: "BMC Disaster Relief Camps", type: "RO Water Plants & Medical Triage Halls", units: "2 Camps", load: "670 / 850", color: "bg-amber-500" },
+                { agency: "Trauma ICU Mobile Squad", type: "Oxygen Defibrillator Ambulances", units: "1 Squad", load: "14 / 15", color: "bg-rose-500" },
+              ].map((ag, idx) => (
+                <div key={idx} className="p-2.5 rounded-xl bg-theme-subtle border border-theme-border space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-theme-primary">{ag.agency}</span>
+                    <span className="font-mono text-[10px] text-theme-muted font-bold">{ag.load} Capacity</span>
+                  </div>
+                  <div className="text-[11px] text-theme-muted">{ag.type}</div>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* Incident Cards List */}
-          <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
-            {filteredIncidents.length === 0 ? (
-              <div className="p-8 text-center text-xs text-theme-muted font-mono border border-dashed border-theme-border rounded-xl">
-                No active incidents in this filter category.
-              </div>
-            ) : (
-              filteredIncidents.map(inc => {
-                const alloc = allocations.find(a => a.report_id === inc.id && a.status === "active");
-                const assignedRes = alloc ? resources.find(r => r.id === alloc.resource_id) : null;
-
-                return (
-                  <div 
-                    key={inc.id}
-                    className="p-3.5 rounded-xl bg-theme-subtle border border-theme-border hover:border-theme-medium transition-all space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-black font-mono uppercase text-white ${
-                          inc.severity === "critical" ? "bg-red-600" :
-                          inc.severity === "high" ? "bg-orange-600" : "bg-amber-600"
-                        }`}>
-                          {inc.severity}
-                        </span>
-                        <span className="text-xs font-bold text-theme-primary">
-                          {inc.location_name}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center space-x-1.5 text-[10px] font-mono text-theme-muted">
-                        <Clock className="w-3 h-3" />
-                        <span>{new Date(inc.timestamp).toLocaleTimeString()}</span>
-                        <span className="uppercase px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-theme-primary font-bold">
-                          {inc.source}
-                        </span>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-theme-secondary line-clamp-2 leading-relaxed font-sans">
-                      {inc.description}
-                    </p>
-
-                    {/* Dispatch Status Strip */}
-                    <div className="flex items-center justify-between text-xs pt-2 border-t border-theme-border/60">
-                      {alloc && assignedRes ? (
-                        <div className="flex items-center space-x-1.5 text-cyan-700 dark:text-cyan-300 text-[11px] font-mono">
-                          <Zap className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
-                          <span>Assigned: <strong>{assignedRes.name}</strong></span>
-                          <span>({alloc.distance_km} km, ~{alloc.eta_minutes}m)</span>
-                        </div>
-                      ) : (
-                        <div className="text-amber-700 dark:text-amber-400 text-[11px] font-semibold flex items-center gap-1">
-                          <AlertTriangle className="w-3.5 h-3.5" />
-                          <span>Pending manual dispatcher review</span>
-                        </div>
-                      )}
-
-                      <button
-                        onClick={() => {
-                          soundEngine.playUiClick();
-                          onSelectMode("authority");
-                        }}
-                        className="text-[11px] font-bold text-red-600 dark:text-red-400 hover:underline flex items-center gap-0.5 cursor-pointer shrink-0"
-                      >
-                        <span>Inspect in Map</span>
-                        <ChevronRight className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* Right Column (5 cols): Resource Deployment Grid & Rapid Drills */}
-        <div className="lg:col-span-5 space-y-4">
-          
-          {/* Widget: Deployed Resource Units */}
-          <div className="bg-theme-card border border-theme-border rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Building className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <h2 className="text-sm sm:text-base font-extrabold text-theme-primary">
-                  Deployed Emergency Units
-                </h2>
-              </div>
-              <button
-                onClick={() => {
-                  soundEngine.playUiClick();
-                  onOpenDeployModal();
-                }}
-                className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700 px-2.5 py-1 rounded-lg flex items-center gap-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 cursor-pointer"
-              >
-                <Plus className="w-3 h-3" />
-                <span>Add Unit</span>
-              </button>
-            </div>
-
-            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-              {resources.map(res => {
-                const fillPct = Math.round((res.current_load / res.capacity) * 100);
-                const isAvailable = res.current_load < res.capacity;
-
-                return (
-                  <div key={res.id} className="p-2.5 rounded-xl bg-theme-subtle border border-theme-border text-xs space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-theme-primary truncate max-w-[190px]">
-                        {res.name}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-mono font-black uppercase ${
-                        !isAvailable ? "bg-red-500/20 text-red-500" : "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                      }`}>
-                        {isAvailable ? "Available" : "Full"}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[10px] text-theme-muted font-mono">
-                        <span>Load: {res.current_load} / {res.capacity}</span>
-                        <span>{fillPct}%</span>
-                      </div>
-                      <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full transition-all ${
-                            fillPct > 90 ? "bg-red-500" : fillPct > 70 ? "bg-amber-500" : "bg-emerald-500"
-                          }`}
-                          style={{ width: `${Math.min(100, fillPct)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Widget: 1-Click Interactive Crisis Simulator */}
+          {/* Interactive Crisis Drill Simulation */}
           <div className="bg-theme-card border border-theme-border rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Sparkles className="w-4 h-4 text-amber-500" />
                 <h2 className="text-sm sm:text-base font-extrabold text-theme-primary">
-                  Simulate Crisis Scenario (1-Click)
+                  Rapid Crisis Simulation Injector
                 </h2>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {[
-                { step: 1, title: "1. Cyclone Inundation", sub: "Web SOS / Kurla" },
-                { step: 2, title: "2. Offline SMS SOS", sub: "Pincode 400050" },
-                { step: 3, title: "3. ICU Evacuation", sub: "Mobile ICU unit" },
-                { step: 4, title: "4. Slum Roof Blowoff", sub: "Shelter camp routing" },
+                { step: 1, title: "1. Cyclone Flood", sub: "Web SOS Report" },
+                { step: 2, title: "2. Offline SMS SOS", sub: "Bandra PIN 400050" },
+                { step: 3, title: "3. ICU Oxygen SOS", sub: "Mobile ICU unit" },
+                { step: 4, title: "4. Slum Roof Blowoff", sub: "Shelter routing" },
               ].map(drill => (
                 <button
                   key={drill.step}
@@ -580,7 +473,7 @@ export default function LandingPage({
         </div>
       </div>
 
-      {/* 4. EMERGENCY HOTLINES & MUNICIPAL DESK STRIP */}
+      {/* 3. EMERGENCY HELPLINES DOCK */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {[
           { title: "National Emergency", number: "112", subtitle: "All-in-one Police & Fire", color: "text-red-600 dark:text-red-400" },
