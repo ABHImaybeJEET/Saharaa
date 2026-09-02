@@ -137,47 +137,47 @@ export default function LandingPage({
     <div className="w-full max-w-[1700px] mx-auto space-y-4 font-sans animate-in fade-in duration-200">
       
       {/* 1. TOP STRATEGIC MISSION CONTROL HUD */}
-      <div className="w-full bg-theme-card border border-theme-border rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+      <div className="w-full bg-theme-card border border-theme-border rounded-2xl p-3.5 sm:p-5 shadow-sm space-y-3.5">
         
         {/* Row 1: Brand, Live Indicators & Navigation Jump Links */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-theme-border">
           
-          <div className="flex items-center space-x-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-red-600 via-rose-600 to-amber-600 flex items-center justify-center text-white font-black shadow-lg shadow-red-600/30 shrink-0">
-              <ShieldAlert className="w-6 h-6" />
+          <div className="flex items-start sm:items-center space-x-2.5">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-red-600 via-rose-600 to-amber-600 flex items-center justify-center text-white font-black shadow-md shadow-red-600/30 shrink-0">
+              <ShieldAlert className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <div className="flex items-center space-x-2.5 flex-wrap">
-                <h1 className="text-base sm:text-lg font-black text-theme-primary tracking-tight font-sans">
-                  SAHARAA STRATEGIC COMMAND & IMPACT OVERVIEW
+            <div className="min-w-0">
+              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                <h1 className="text-sm sm:text-base font-black text-theme-primary tracking-tight font-sans">
+                  SAHARAA STRATEGIC COMMAND
                 </h1>
-                <span className="px-2 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 font-mono text-[10px] font-extrabold border border-red-500/30 flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                  LIVE GRID ONLINE
+                <span className="px-2 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 font-mono text-[10px] font-extrabold border border-red-500/30 flex items-center gap-1 shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                  LIVE GRID
                 </span>
-                <span className="px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 font-mono text-[10px] font-bold border border-cyan-500/30 hidden sm:inline">
-                  MUMBAI - THANE BASIN
+                <span className="px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 font-mono text-[10px] font-bold border border-cyan-500/30 hidden sm:inline shrink-0">
+                  MUMBAI BASIN
                 </span>
               </div>
-              <p className="text-xs text-theme-muted mt-0.5 flex items-center gap-2">
-                <span>Multi-Agency Spatial Dispatch & Strategic Humanitarian Operations</span>
+              <p className="text-[11px] sm:text-xs text-theme-muted mt-0.5 flex items-center gap-1.5 flex-wrap">
+                <span>Multi-Agency Spatial Dispatch & Relief</span>
                 <span>•</span>
                 <span className="font-mono text-theme-secondary font-semibold">{currentTime} IST</span>
               </p>
             </div>
           </div>
 
-          {/* Quick Launch Buttons */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {/* Quick Launch Action Buttons (Clean 2-Col Grid on Mobile, Flex on Desktop) */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 shrink-0">
             <button
               onClick={() => {
                 soundEngine.playUiClick();
                 onSelectMode("authority");
               }}
-              className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs flex items-center space-x-1.5 shadow-md shadow-red-600/20 active:scale-95 transition-all cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs flex items-center justify-center space-x-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
             >
               <Map className="w-3.5 h-3.5" />
-              <span>Launch Tactical Map</span>
+              <span>Tactical Map</span>
             </button>
 
             <button
@@ -185,10 +185,10 @@ export default function LandingPage({
                 soundEngine.playUiClick();
                 onSelectMode("citizen");
               }}
-              className="px-3.5 py-2 rounded-xl bg-theme-subtle hover:bg-slate-200 dark:hover:bg-slate-800 border border-theme-border text-theme-primary font-bold text-xs flex items-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-theme-subtle hover:bg-slate-200 dark:hover:bg-slate-800 border border-theme-border text-theme-primary font-bold text-xs flex items-center justify-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
             >
               <LifeBuoy className="w-3.5 h-3.5 text-rose-500" />
-              <span>Citizen SOS Portal</span>
+              <span>Citizen SOS</span>
             </button>
 
             <button
@@ -196,7 +196,7 @@ export default function LandingPage({
                 soundEngine.playUiClick();
                 onOpenSmsModal();
               }}
-              className="px-3.5 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/40 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 font-bold text-xs font-mono flex items-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/40 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 font-bold text-xs font-mono flex items-center justify-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>SMS Gateway</span>
@@ -207,7 +207,7 @@ export default function LandingPage({
                 soundEngine.playUiClick();
                 onOpenBroadcastModal();
               }}
-              className="px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 font-bold text-xs flex items-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 font-bold text-xs flex items-center justify-center space-x-1.5 active:scale-95 transition-all cursor-pointer"
             >
               <Radio className="w-3.5 h-3.5 animate-pulse text-amber-500" />
               <span>Broadcast</span>
@@ -218,10 +218,11 @@ export default function LandingPage({
                 soundEngine.playUiClick();
                 onOpenSitRep();
               }}
-              className="p-2 rounded-xl bg-theme-subtle border border-theme-border text-theme-muted hover:text-cyan-500 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer"
+              className="col-span-2 sm:col-span-1 px-3 py-2 rounded-xl bg-theme-subtle border border-theme-border text-theme-secondary hover:text-theme-primary hover:bg-slate-200 dark:hover:bg-slate-800 text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
               title="Generate Emergency SitRep"
             >
-              <FileText className="w-4 h-4" />
+              <FileText className="w-3.5 h-3.5 text-cyan-500" />
+              <span>SitRep</span>
             </button>
           </div>
         </div>
