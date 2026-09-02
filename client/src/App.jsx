@@ -1,6 +1,7 @@
 // client/src/App.jsx
 import React, { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
+import LandingPage from "./components/LandingPage";
 import AuthorityDashboard from "./components/AuthorityDashboard";
 import CitizenPortal from "./components/CitizenPortal";
 import BroadcastAlertModal from "./components/BroadcastAlertModal";
@@ -24,7 +25,7 @@ import {
 
 export default function App() {
   const [isConnected, setIsConnected] = useState(false);
-  const [currentMode, setCurrentMode] = useState("authority"); // "authority" | "citizen"
+  const [currentMode, setCurrentMode] = useState("landing"); // "landing" | "authority" | "citizen"
   const [lang, setLang] = useState(() => localStorage.getItem("saharaa_lang") || "en");
   const [theme, setTheme] = useState(() => localStorage.getItem("saharaa_theme") || "dark");
 
@@ -202,9 +203,27 @@ export default function App() {
         translations={TRANSLATIONS}
       />
 
-      {/* 2. Main Body: Authority Command vs Citizen Portal */}
+      {/* 2. Main Body: Overview Landing vs Authority Command vs Citizen Portal */}
       <main className="flex-1 p-2 sm:p-3 md:p-4 max-w-[1700px] w-full mx-auto flex flex-col">
-        {currentMode === "authority" ? (
+        {currentMode === "landing" ? (
+          <LandingPage
+            reports={reports}
+            resources={resources}
+            allocations={allocations}
+            broadcastAlerts={broadcastAlerts}
+            imdAlerts={imdAlerts}
+            metrics={metrics}
+            onSelectMode={(mode) => setCurrentMode(mode)}
+            onOpenCitizenModal={() => setIsCitizenModalOpen(true)}
+            onOpenSmsModal={() => setIsSmsModalOpen(true)}
+            onOpenBroadcastModal={() => setIsBroadcastModalOpen(true)}
+            onOpenDemoTour={() => setIsDemoTourOpen(true)}
+            onOpenSitRep={() => setIsSitRepOpen(true)}
+            onOpenDeployModal={() => setIsDeployModalOpen(true)}
+            lang={lang}
+            translations={TRANSLATIONS}
+          />
+        ) : currentMode === "authority" ? (
           <AuthorityDashboard
             region={region}
             reports={reports}

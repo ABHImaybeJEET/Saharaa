@@ -9,13 +9,14 @@ import {
   Sun, 
   Moon, 
   Radio,
-  Compass
+  Compass,
+  LayoutDashboard
 } from "lucide-react";
 import { soundEngine } from "../utils/soundEffects";
 
 export default function Navbar({
   isConnected,
-  currentMode = "authority", // "authority" | "citizen"
+  currentMode = "landing", // "landing" | "authority" | "citizen"
   setCurrentMode,
   onOpenBroadcastModal,
   onOpenDemoTour,
@@ -45,7 +46,7 @@ export default function Navbar({
           <div 
             onClick={() => {
               soundEngine.playUiClick();
-              setCurrentMode("authority");
+              setCurrentMode("landing");
             }}
             className="flex items-center space-x-2 cursor-pointer select-none shrink-0"
           >
@@ -58,21 +59,36 @@ export default function Navbar({
                   SAHARAA
                 </span>
                 <span className="text-[10px] text-theme-muted font-medium hidden xs:inline">
-                  Disaster Coordination
+                  Disaster Grid
                 </span>
                 <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} title={isConnected ? "Grid Online" : "Grid Offline"}></span>
               </div>
             </div>
           </div>
 
-          {/* Mode Switcher (Authority vs Citizen) */}
+          {/* 3-Mode Switcher (Overview vs Authority vs Citizen) */}
           <div className="flex items-center bg-theme-subtle p-1 rounded-xl border border-theme-border text-xs font-bold shrink-0">
+            <button
+              onClick={() => {
+                soundEngine.playUiClick();
+                setCurrentMode("landing");
+              }}
+              className={`flex items-center space-x-1 px-2 sm:px-2.5 py-1 rounded-lg transition-all ${
+                currentMode === "landing"
+                  ? "bg-red-600 text-white shadow-sm font-bold"
+                  : "text-theme-secondary hover:text-theme-primary"
+              }`}
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              <span className="text-xs">Overview</span>
+            </button>
+
             <button
               onClick={() => {
                 soundEngine.playUiClick();
                 setCurrentMode("authority");
               }}
-              className={`flex items-center space-x-1 px-2.5 sm:px-3 py-1 rounded-lg transition-all ${
+              className={`flex items-center space-x-1 px-2 sm:px-2.5 py-1 rounded-lg transition-all ${
                 currentMode === "authority"
                   ? "bg-red-600 text-white shadow-sm font-bold"
                   : "text-theme-secondary hover:text-theme-primary"
@@ -87,7 +103,7 @@ export default function Navbar({
                 soundEngine.playUiClick();
                 setCurrentMode("citizen");
               }}
-              className={`flex items-center space-x-1 px-2.5 sm:px-3 py-1 rounded-lg transition-all ${
+              className={`flex items-center space-x-1 px-2 sm:px-2.5 py-1 rounded-lg transition-all ${
                 currentMode === "citizen"
                   ? "bg-red-600 text-white shadow-sm font-bold"
                   : "text-theme-secondary hover:text-theme-primary"
@@ -130,7 +146,7 @@ export default function Navbar({
               soundEngine.playUiClick();
               if (onOpenDemoTour) onOpenDemoTour();
             }}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold transition-all shadow-sm active:scale-95"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
             title="Interactive Step-by-Step Crisis Response Guide"
           >
             <Compass className="w-3.5 h-3.5" />
@@ -159,7 +175,7 @@ export default function Navbar({
                   setLang(l.code);
                   soundEngine.playUiClick();
                 }}
-                className={`px-2 py-0.5 rounded-lg transition-all ${
+                className={`px-2 py-0.5 rounded-lg transition-all cursor-pointer ${
                   lang === l.code
                     ? "bg-red-600 text-white font-black shadow-sm"
                     : "text-theme-muted hover:text-theme-primary"
@@ -186,3 +202,4 @@ export default function Navbar({
     </header>
   );
 }
+
