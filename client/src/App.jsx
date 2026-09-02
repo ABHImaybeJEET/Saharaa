@@ -19,8 +19,10 @@ import {
   X, 
   Radio, 
   Zap, 
-  CheckCircle,
-  Phone
+  CheckCircle, 
+  Phone,
+  Map,
+  Users
 } from "lucide-react";
 
 export default function App() {

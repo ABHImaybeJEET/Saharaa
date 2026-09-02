@@ -14,7 +14,8 @@ import {
   Sparkles, 
   Clock, 
   ChevronRight,
-  Navigation
+  Navigation,
+  Map
 } from "lucide-react";
 import { executeManualOverride, resolveReport } from "../utils/api";
 import { soundEngine } from "../utils/soundEffects";
